@@ -11,6 +11,7 @@ export default function Home() {
   const [mounted, setMounted] = useState(false)
   const [deals, setDeals] = useState([]);
   const getDeals = async()=>{
+    console.log('Deals response: called');
     try{
       const dealsResponse = await axiosHandle.get('/products/deals/home');
       console.log('Deals response:', dealsResponse.data);

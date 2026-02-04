@@ -21,7 +21,6 @@ const login = async (req, res) => {
 }
 
 const getMe = async (req, res) => {
-    
     try{
         // const {userId:userd, role} = req.headers
         const userId = req.headers.user_id; // Assuming userId is set in auth middleware

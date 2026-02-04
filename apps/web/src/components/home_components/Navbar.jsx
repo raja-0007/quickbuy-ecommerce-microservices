@@ -4,12 +4,14 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group"
-import { ArrowUpRight, Search } from "lucide-react"
+import { ArrowUpRight, Heart, LogOut, Search, ShoppingBag, ShoppingCart, User } from "lucide-react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { axiosHandle } from '@/lib/api'
 import { useDebouncedCallback } from 'use-debounce'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useSearchProducts } from '@/contexts/searchProductsContext'
+import Link from 'next/link'
+import { signOut } from 'next-auth/react'
 
 const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState("")
@@ -19,6 +21,12 @@ const Navbar = () => {
   const pathname = usePathname()
   const searchParams = useSearchParams()
 
+  useEffect(() => {
+    if (searchParams.values().length === 0) return;
+    const query = searchParams.get("searchQuery") || ""
+    setSearchQuery(query)
+    debounced(query)
+  }, [])
 
   const debounced = useDebouncedCallback(
     // function
@@ -56,17 +64,47 @@ const Navbar = () => {
     }
   }
 
+  if(pathname.includes('/login') || pathname.includes('/register')){
+    return null
+  }
 
   return (
     <>
       <div className='bg-background px-5 py-2 sticky top-0 z-50 w-full grid items-center border-b border-border sm:grid-cols-6'>
-        <div className='text-lg font-extrabold text-primary font-stretch-100%'>QuickBuy</div>
+        <Link href={"/"} className='text-xl  font-extrabold text-primary'>QuickBuy</Link>
         <div className='col-span-4 flex items-center justify-center'>
           <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery}
             searchResults={searchResults} setSearchResults={setSearchResults} debounced={debounced}
           />
         </div>
-        <div className='flex justify-end'><Profile /></div>
+        <div className='flex justify-end gap-16 items-center'>
+          <Link href={"/cart"} title='Shopping Cart'><ShoppingCart title="Shopping Cart" /></Link>
+          <Link href={"/wishlist"} title='wishlist'><Heart title="wishlist" /></Link>
+          <Link href={"/wishlist"} title='wishlist'><ShoppingBag title="wishlist" /></Link>
+          <span title='Profile' className='relative group cursor-pointer'>
+            <Profile />
+            <div className="absolute z-10 hidden group-hover:flex flex-col items-start justify-center bg-card border border-border p-2 rounded-md top-full right-0 mt-0 w-40 shadow-lg">
+
+        <Link
+          href="/profile"
+          className="flex w-full items-center gap-2 text-sm hover:bg-slate-100 p-2 rounded-md transition-colors"
+        >
+          <User size={16} />
+          <span>My Profile</span>
+        </Link>
+
+        <Link
+          href="#"
+          onClick={()=>signOut()}
+          className="flex w-full items-center gap-2 text-sm hover:bg-slate-100 p-2 rounded-md transition-colors text-red-600"
+        >
+          <LogOut size={16} />
+          <span>Logout</span>
+        </Link>
+
+      </div>
+          </span>
+        </div>
         {/* {searchResults.length > 0 && <div className='absolute transition-all duration-200 fade-in w-full h-[300vh] z-[999] bg-black/80'></div>} */}
       </div>
     </>
@@ -78,6 +116,11 @@ function SearchBar({ searchQuery, setSearchQuery, searchResults, setSearchResult
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const [show, setShow] = useState(true)
+  useEffect(() => {
+    setShow(false)
+
+  }, [pathname])
   return (
     <div className='relative w-full'>
       <InputGroup className="max-w-md mx-auto border border-border">
@@ -89,7 +132,7 @@ function SearchBar({ searchQuery, setSearchQuery, searchResults, setSearchResult
           }
         }}
           onChange={(e) => {
-            setSearchQuery(e.target.value); debounced(e.target.value)
+            setSearchQuery(e.target.value); debounced(e.target.value); setShow(true);
 
           }}
 
@@ -99,7 +142,7 @@ function SearchBar({ searchQuery, setSearchQuery, searchResults, setSearchResult
         </InputGroupAddon>
         <InputGroupAddon align="inline-end">{searchResults.length > 0 && `${searchResults.length} results`}</InputGroupAddon>
       </InputGroup>
-      {searchResults.length > 0 && !pathname.includes('/search-results') && (
+      {show && searchResults.length > 0 && !pathname.includes('/search-results') && (
         <div className='absolute top-full left- w-md left-1/2 -translate-x-1/2 bg-card rounded-lg mt-1 max-h-60 overflow-y-auto z-50'>
           {searchResults.map((item, index) => (
             <div key={index} className='p-3 border-b flex items-center justify-between gap-2 border-border hover:bg-slate-100 cursor-pointer'>
@@ -120,13 +163,15 @@ function SearchBar({ searchQuery, setSearchQuery, searchResults, setSearchResult
 
 function Profile() {
   return (
-    <Avatar>
+    <Avatar className={"group"}>
       {/* <AvatarImage
         src="https://github.com/shadcn.png"
         alt="@shadcn"
         className="grayscale"
       /> */}
       <AvatarFallback>CN</AvatarFallback>
+
+      
     </Avatar>
   )
 }

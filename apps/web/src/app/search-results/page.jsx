@@ -11,6 +11,8 @@ import { useSearchProducts } from '@/contexts/searchProductsContext'
 import { toast } from 'sonner'
 import { Slider } from '@/components/ui/slider'
 import { Input } from '@/components/ui/input'
+import Link from 'next/link'
+import { axiosHandle } from '@/lib/api'
 
 // Sample products data
 const PRODUCTS = [
@@ -64,13 +66,30 @@ const SearchResults = () => {
         setSelectedRatings(newRatings)
     }
 
+    const addToCart = async(e, product) => {
+
+        e.preventDefault()
+        e.stopPropagation()
+        try{
+            console.log("Adding to cart", product)
+            const response = await axiosHandle.post('/orders/cart/addToCart', product)
+            console.log("Add to cart response", response.data)
+            toast.success("Product added to cart!", { position: "top-right" })
+        }catch(err){
+            console.log(err)
+            toast.error("Failed to add product to cart!", { position: "top-right" })
+        }
+
+    }
+
+
     const filteredProducts = useMemo(() => {
         let sorted = [...searchResults]
 
         // Filter by price
         sorted = sorted.filter((p) => {
             const finalPrice = p.price - (p.price * p.discountPercentage) / 100
-            return (finalPrice*91.91) >= priceRange[0] && (finalPrice*91.91) <= priceRange[1]
+            return (finalPrice * 91.91) >= priceRange[0] && (finalPrice * 91.91) <= priceRange[1]
         })
 
         // Filter by rating
@@ -118,7 +137,7 @@ const SearchResults = () => {
     return (
         <div className="min-h-screen bg-background">
             {/* Header */}
-            <header className="sticky top-0 z-50 border-b border-border bg-card backdrop-blur-sm">
+            <header className="sticky top-10 z-10 border-b border-border bg-card backdrop-blur-sm">
                 <div className="mx-auto w-full px-4 sm:px-6 lg:px-8">
                     <div className="flex items-center justify-between py-4">
                         <div>
@@ -167,11 +186,11 @@ const SearchResults = () => {
                                 <div className="space-y-4">
 
                                     <div className='text-center flex items-center justify-center'>
-                                        
-                                        ₹<Input className={'w-20 border border-primary focus:ring-0 p-1 h-6'} value={priceRange[0]} onChange={(e) => setPriceRange([e.target.value, priceRange[1]])}/>
+
+                                        ₹<Input className={'w-20 border border-primary focus:ring-0 p-1 h-6'} value={priceRange[0]} onChange={(e) => setPriceRange([e.target.value, priceRange[1]])} />
                                         <span className='mx-3'>-</span>
-                                        ₹<Input className={'w-20 border border-primary focus:ring-0 p-1 h-6'} value={priceRange[1]} onChange={(e) => setPriceRange([priceRange[0], e.target.value])}/>
-                                       
+                                        ₹<Input className={'w-20 border border-primary focus:ring-0 p-1 h-6'} value={priceRange[1]} onChange={(e) => setPriceRange([priceRange[0], e.target.value])} />
+
                                         {/* {priceRange[0]} - ₹{priceRange[1]} */}
                                     </div>
                                     <Slider
@@ -247,98 +266,104 @@ const SearchResults = () => {
                                     const isFavorited = wishlist.has(product.id)
 
                                     return (
-                                        <Card
-                                            key={product.id}
-                                            className="group overflow-hidden border-border hover:border-primary transition-all hover:shadow-lg py-0"
-                                        >
-                                            <CardContent className="p-0">
-                                                {/* Image Container */}
-                                                <div className="relative overflow-hidden bg-secondary h-48">
-                                                    <div className='w-full h-full'>
+                                        <Link href={`/product/${product.id}`} key={product.id}>
+                                            <Card
 
-                                                        <Image fill
-                                                            src={product.thumbnail || "/placeholder.svg"}
-                                                            alt={product.title}
-                                                            className="h-full w-full object-contain group-hover:scale-110 transition-transform duration-300"
-                                                        />
-                                                    </div>
+                                                className="group overflow-hidden border-border hover:border-primary transition-all hover:shadow-lg py-0"
+                                            >
+                                                <CardContent className="p-0">
+                                                    {/* Image Container */}
+                                                    <div className="relative overflow-hidden bg-secondary h-48">
+                                                        <div className='w-full h-full'>
 
-                                                    {/* Discount Badge */}
-                                                    {product.discountPercentage > 0 && (
-                                                        <Badge className="absolute top-3 left-3 bg-accent text-accent-foreground hover:bg-accent">
-                                                            -{product.discountPercentage.toFixed(0)}%
-                                                        </Badge>
-                                                    )}
-
-                                                    {/* Wishlist Button */}
-                                                    <button
-                                                        onClick={() => toggleWishlist(product.id)}
-                                                        className="absolute top-3 right-3 rounded-full bg-card p-2 shadow-md hover:bg-primary hover:text-primary-foreground transition-colors"
-                                                    >
-                                                        <Heart
-                                                            size={18}
-                                                            className={isFavorited ? 'fill-current text-accent' : 'text-foreground'}
-                                                        />
-                                                    </button>
-
-                                                    {/* Stock Status */}
-                                                    {product.stock < 10 && (
-                                                        <div className="absolute bottom-3 left-3">
-                                                            <Badge variant="outline" className="bg-background/80">
-                                                                Only {product.stock} left
-                                                            </Badge>
+                                                            <Image fill
+                                                                src={product.thumbnail || "/placeholder.svg"}
+                                                                alt={product.title}
+                                                                className="h-full w-full object-contain group-hover:scale-110 transition-transform duration-300"
+                                                            />
                                                         </div>
-                                                    )}
-                                                </div>
 
-                                                {/* Content */}
-                                                <div className="p-4">
-                                                    <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">
-                                                        {product.category.replace('-', ' ')}
-                                                    </p>
-
-                                                    <h3 className="text-sm font-semibold text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors">
-                                                        {product.title}
-                                                    </h3>
-
-                                                    {/* Rating */}
-                                                    <div className="mb-3 flex items-center gap-2">
-                                                        <div className="flex items-center gap-0.5">
-                                                            {Array.from({ length: 5 }).map((_, i) => (
-                                                                <Star
-                                                                    key={i}
-                                                                    size={14}
-                                                                    className={`${i < Math.round(product.rating)
-                                                                        ? 'fill-accent text-accent'
-                                                                        : 'text-border'
-                                                                        }`}
-                                                                />
-                                                            ))}
-                                                        </div>
-                                                        <span className="text-xs text-muted-foreground">
-                                                            ({product.rating})
-                                                        </span>
-                                                    </div>
-
-                                                    {/* Price */}
-                                                    <div className="mb-4 flex items-baseline gap-2">
-                                                        <span className="text-lg font-bold text-primary">
-                                                            ₹{(discountedPrice*91.91).toFixed(2)}
-                                                        </span>
+                                                        {/* Discount Badge */}
                                                         {product.discountPercentage > 0 && (
-                                                            <span className="text-xs text-muted-foreground line-through">
-                                                                ₹{(product.price*91.91).toFixed(2)}
-                                                            </span>
+                                                            <Badge className="absolute top-3 left-3 bg-accent text-accent-foreground hover:bg-accent">
+                                                                -{product.discountPercentage.toFixed(0)}%
+                                                            </Badge>
+                                                        )}
+
+                                                        {/* Wishlist Button */}
+                                                        <button
+                                                            onClick={(e) => {
+                                                                e.preventDefault()
+                                                                e.stopPropagation()
+                                                                toggleWishlist(product.id)
+                                                            }}
+                                                            className="absolute top-3 right-3 rounded-full bg-card p-2 shadow-md hover:bg-primary hover:text-primary-foreground transition-colors"
+                                                        >
+                                                            <Heart
+                                                                size={18}
+                                                                className={isFavorited ? 'fill-current text-accent' : 'text-foreground'}
+                                                            />
+                                                        </button>
+
+                                                        {/* Stock Status */}
+                                                        {product.stock < 10 && (
+                                                            <div className="absolute bottom-3 left-3">
+                                                                <Badge variant="outline" className="bg-background/80">
+                                                                    Only {product.stock} left
+                                                                </Badge>
+                                                            </div>
                                                         )}
                                                     </div>
 
-                                                    {/* Add to Cart Button */}
-                                                    <Button onClick={() => toast.success("Event has been created.", { position: "top-right" })} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
-                                                        Add to Cart
-                                                    </Button>
-                                                </div>
-                                            </CardContent>
-                                        </Card>
+                                                    {/* Content */}
+                                                    <div className="p-4">
+                                                        <p className="text-xs text-muted-foreground mb-1 uppercase tracking-wide">
+                                                            {product.category.replace('-', ' ')}
+                                                        </p>
+
+                                                        <h3 className="text-sm font-semibold text-foreground line-clamp-2 mb-2 group-hover:text-primary transition-colors">
+                                                            {product.title}
+                                                        </h3>
+
+                                                        {/* Rating */}
+                                                        <div className="mb-3 flex items-center gap-2">
+                                                            <div className="flex items-center gap-0.5">
+                                                                {Array.from({ length: 5 }).map((_, i) => (
+                                                                    <Star
+                                                                        key={i}
+                                                                        size={14}
+                                                                        className={`${i < Math.round(product.rating)
+                                                                            ? 'fill-accent text-accent'
+                                                                            : 'text-border'
+                                                                            }`}
+                                                                    />
+                                                                ))}
+                                                            </div>
+                                                            <span className="text-xs text-muted-foreground">
+                                                                ({product.rating})
+                                                            </span>
+                                                        </div>
+
+                                                        {/* Price */}
+                                                        <div className="mb-4 flex items-baseline gap-2">
+                                                            <span className="text-lg font-bold text-primary">
+                                                                ₹{(discountedPrice * 91.91).toFixed(2)}
+                                                            </span>
+                                                            {product.discountPercentage > 0 && (
+                                                                <span className="text-xs text-muted-foreground line-through">
+                                                                    ₹{(product.price * 91.91).toFixed(2)}
+                                                                </span>
+                                                            )}
+                                                        </div>
+
+                                                        {/* Add to Cart Button */}
+                                                        <Button onClick={(e)=>addToCart(e, product)} className="w-full bg-primary text-primary-foreground hover:bg-primary/90">
+                                                            Add to Cart
+                                                        </Button>
+                                                    </div>
+                                                </CardContent>
+                                            </Card>
+                                        </Link>
                                     )
                                 })}
                             </div>

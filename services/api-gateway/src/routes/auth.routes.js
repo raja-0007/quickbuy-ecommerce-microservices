@@ -12,7 +12,7 @@ router.post('/register', async (req, res) => {
         const response = await axios.post(`${process.env.AUTH_BASE_URL}/register`, req.body);
         res.status(response.status).json(response.data);
     }catch(error){
-        res.status(500).json({ error: error.message });
+        res.status(error.status || 500).json({ error: error.response.data.error || 'Registration failed' });
     }
 });
 
@@ -20,9 +20,11 @@ router.post('/login', async (req, res) => {
     try{
         // console.log('gateway login called', req.body);
         const response = await axios.post(`${process.env.AUTH_BASE_URL}/login`, req.body);
+        console.log('Login response from auth service:', response.data);
         res.status(response.status).json(response.data);    
     }catch(error){
-        res.status(500).json({ error: error.message });
+        // console.error('Login error in gateway:', error);
+        res.status(error.status || 500).json({ error: error.response.data.error || 'Login failed' });
     }
 });
 
@@ -37,7 +39,7 @@ router.get('/me', authMiddleware, async (req, res) => {
       })
         res.status(response.status).json(response.data);
     }catch(error){
-        res.status(500).json({ error: error.message });
+        res.status(error.status || 500).json({ error: error.message });
     }
 });
 

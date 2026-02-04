@@ -1,7 +1,23 @@
 const app = require('./app')
+const connectDB = require('./config/db');
+const dotenv = require('dotenv');
+dotenv.config();
 
 const PORT = process.env.PORT || 4004
 
-app.listen(PORT, () => {
-  console.log(`Auth service running on port ${PORT}`)
-})
+
+const Initializer = async () => {
+  try{
+    await connectDB()
+    .then(()=>{
+      app.listen(PORT, () => {
+        console.log(`User service running on port ${PORT}`)
+      })
+    })
+  }catch(err){
+    console.error('Failed to connect to the database', err);
+    process.exit(1);
+  }
+}
+
+Initializer();

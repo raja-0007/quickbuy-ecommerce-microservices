@@ -31,11 +31,21 @@ export default function LoginPage() {
       alert('Please fill all fields')
       return
     }
-    await signIn('credentials', {
-      email,
-      password,
-      callbackUrl: callbackUrl 
-    })
+    
+      const res = await signIn('credentials', {
+        email,
+        password,
+        redirect: false
+      })
+      // console.log("Sign in response:", res)
+      if(res.ok){
+        window.location.href = callbackUrl
+      }else{
+        setIsLoading(false)
+      alert(res.error)
+      }
+   
+
     // setTimeout(() => setIsLoading(false), 1000)
   }
 

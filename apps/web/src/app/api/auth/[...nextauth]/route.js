@@ -25,12 +25,16 @@ const handler = NextAuth({
                         email: res.data.user.email,
                         role: res.data.user.role,
                         name: res.data.user.name,
-                        accessToken: res.data.accessToken,
-                        refreshToken: res.data.refreshToken
+                        accessToken: res.data.user.accessToken,
+                        refreshToken: res.data.user.refreshToken
                     }
                 } catch (err) {
-                    console.error('Authorize error:', err);
-                    return null
+                    // console.error('Authorize error:', err, err.response);
+                    if(err.response && err.response.status == 500){
+                        throw new Error("something went wrong, please try again later");
+                    }
+                    // return err
+                    throw new Error(err.response.data.error || 'Login failed');
                 }
             }
         })
