@@ -1,11 +1,14 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
 import { Trash2, Plus, Minus, ChevronLeft, Lock, Truck } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
+import { useSession } from 'next-auth/react'
+import { axiosHandle } from '@/lib/api'
+import Image from 'next/image'
 
 const CART_ITEMS = [
   {
@@ -35,14 +38,16 @@ const CART_ITEMS = [
 ]
 
 const CartPage = () => {
-  const [cartItems, setCartItems] = useState(CART_ITEMS)
+  // const [cartItems, setCartItems] = useState([])
+  const [cart, setCart] = useState(null)
+  const { data: session, status } = useSession()
 
   const { subtotal, discount, tax, total } = useMemo(() => {
-    const subtotal = cartItems.reduce((sum, item) => {
+    const subtotal = cart?.items.reduce((sum, item) => {
       return sum + item.price * item.quantity
     }, 0)
 
-    const discount = cartItems.reduce((sum, item) => {
+    const discount = cart?.items.reduce((sum, item) => {
       const discountAmount = (item.price * item.discountPercentage) / 100 * item.quantity
       return sum + discountAmount
     }, 0)
@@ -51,20 +56,38 @@ const CartPage = () => {
     const total = subtotal - discount + tax
 
     return { subtotal, discount, tax, total }
-  }, [cartItems])
+  }, [cart?.items])
+
+  const getCart = async () => {
+    console.log('Fetching cart for user:', session)
+    try {
+      const res = await axiosHandle.get(`/orders/cart/getCart`);
+      console.log('Cart response:', res.data);
+      setCart(res.data);
+    } catch (error) {
+      console.log('Error fetching cart:', error);
+    }
+  }
+  useEffect(()=>{
+    if(status !== 'loading'){
+
+      getCart()
+    }
+
+  },[status])
 
   const updateQuantity = (id, newQuantity) => {
-    if (newQuantity === 0) {
-      removeItem(id)
-    } else {
-      setCartItems(
-        cartItems.map((item) => (item.id === id ? { ...item, quantity: newQuantity } : item))
-      )
-    }
+    // if (newQuantity === 0) {
+    //   removeItem(id)
+    // } else {
+    //   setCartItems(
+    //     cartItems.map((item) => (item.id === id ? { ...item, quantity: newQuantity } : item))
+    //   )
+    // }
   }
 
   const removeItem = (id) => {
-    setCartItems(cartItems.filter((item) => item.id !== id))
+    // setCartItems(cartItems.filter((item) => item.id !== id))
   }
 
   const handleCheckout = () => {
@@ -86,7 +109,7 @@ const CartPage = () => {
       </header>
 
       <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {cartItems.length === 0 ? (
+        {cart?.items.length === 0 ? (
           <div className="flex flex-col items-center justify-center py-16">
             <div className="w-20 h-20 rounded-full bg-muted flex items-center justify-center mb-4">
               <svg className="w-10 h-10 text-muted-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -104,25 +127,26 @@ const CartPage = () => {
             {/* Cart Items */}
             <div className="lg:col-span-2">
               <h2 className="text-lg font-semibold text-foreground mb-4">
-                {cartItems.length} item{cartItems.length !== 1 ? 's' : ''} in your cart
+                {cart?.items.length} item{cart?.items.length !== 1 ? 's' : ''} in your cart
               </h2>
 
               <div className="space-y-4">
-                {cartItems.map((item) => {
+                {cart?.items.map((item) => {
                   const finalPrice = item.price - (item.price * item.discountPercentage) / 100
                   const itemTotal = finalPrice * item.quantity
 
                   return (
-                    <div key={item.id}>
+                    <div key={item.productId}>
                       <Card className="border border-border bg-card overflow-hidden">
                         <CardContent className="p-4">
                           <div className="flex gap-4">
                             {/* Product Image */}
-                            <div className="flex-shrink-0 w-24 h-24 bg-muted rounded-lg overflow-hidden">
-                              <img
-                                src={item.image || "/placeholder.svg"}
+                            <div className="flex-shrink-0 w-24 h-24  relative bg-muted rounded-lg overflow-hidden">
+                              <Image
+                              fill
+                                src={item.imageUrl || "/placeholder.svg"}
                                 alt={item.title}
-                                className="w-full h-full object-cover"
+                                className="w-full h-full object-cover hover:scale-105 transition-transform"
                               />
                             </div>
 
@@ -132,11 +156,11 @@ const CartPage = () => {
 
                               {/* Pricing */}
                               <div className="flex items-center gap-2 mb-3">
-                                <span className="font-bold text-primary">${finalPrice.toFixed(2)}</span>
+                                <span className="font-bold text-primary">${item.totalPrice?.toFixed(2)}</span>
                                 {item.discountPercentage > 0 && (
                                   <>
                                     <span className="text-sm text-muted-foreground line-through">
-                                      ${item.price.toFixed(2)}
+                                      ${item.price?.toFixed(2)}
                                     </span>
                                     <span className="text-xs font-semibold text-accent">
                                       Save {item.discountPercentage}%
@@ -173,10 +197,10 @@ const CartPage = () => {
                             <div className="flex flex-col items-end gap-4">
                               <div className="text-right">
                                 <p className="text-sm text-muted-foreground mb-1">Item total</p>
-                                <p className="text-lg font-bold text-foreground">${itemTotal.toFixed(2)}</p>
+                                <p className="text-lg font-bold text-foreground">${item.itemTotal?.toFixed(2)}</p>
                               </div>
                               <Button
-                                onClick={() => removeItem(item.id)}
+                                onClick={() => removeItem(item.productId)}
                                 variant="ghost"
                                 size="sm"
                                 className="text-destructive hover:bg-destructive/10"
@@ -204,17 +228,21 @@ const CartPage = () => {
                   <div className="space-y-3">
                     <div className="flex justify-between text-foreground">
                       <span>Subtotal</span>
-                      <span>${subtotal.toFixed(2)}</span>
+                      <span>${cart?.priceDetails?.subTotal?.toFixed(2)}</span>
                     </div>
                     {discount > 0 && (
                       <div className="flex justify-between text-accent font-semibold">
                         <span>Discount</span>
-                        <span>-${discount.toFixed(2)}</span>
+                        <span>-${cart?.priceDetails?.discount?.toFixed(2)}</span>
                       </div>
                     )}
                     <div className="flex justify-between text-foreground">
                       <span>Tax (10%)</span>
-                      <span>${tax.toFixed(2)}</span>
+                      <span>${cart?.priceDetails?.tax?.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-foreground">
+                      <span>Shipping</span>
+                      <span>${cart?.priceDetails?.shipping?.toFixed(2)}</span>
                     </div>
                   </div>
 
@@ -223,7 +251,7 @@ const CartPage = () => {
                   {/* Total */}
                   <div className="flex justify-between items-center">
                     <span className="text-lg font-semibold text-foreground">Total</span>
-                    <span className="text-2xl font-bold text-primary">${total.toFixed(2)}</span>
+                    <span className="text-2xl font-bold text-primary">${cart?.priceDetails?.total?.toFixed(2)}</span>
                   </div>
 
                   {/* Trust Badges */}

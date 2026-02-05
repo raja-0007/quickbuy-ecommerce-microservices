@@ -34,15 +34,16 @@ const addToCart = async (orderData) => {
                         imageUrl: orderData.images[0],
                         discountPercentage: orderData.discountPercentage || 0,
                         totalPrice: orderData.price - (orderData.price * (orderData.discountPercentage || 0) / 100),
+                        itemTotal: orderData.price - (orderData.price * (orderData.discountPercentage || 0) / 100),
 
                     }
                 ],
                 priceDetails: {
-                    subTotal: orderData.price - (orderData.price * (orderData.discountPercentage || 0) / 100),
+                    subTotal: itemTotal,
                     tax: 0,
                     shipping: 0,
                     discount: 0,
-                    total: orderData.price - (orderData.price * (orderData.discountPercentage || 0) / 100),
+                    total: itemTotal,
                 },
             })
 
@@ -51,48 +52,46 @@ const addToCart = async (orderData) => {
         }
         else{
             // Update existing cart
-            console.log("Updating existing cart"); 
-            return orderData
+            let updatedCart = cart
+            // console.log("Updating existing cart", updatedCart, "cart", cart); 
+            if(updatedCart.items.some(item => item.productId === orderData._id)){
+                updatedCart.items = updatedCart.items.map(item => {
+                    if(item.productId === orderData._id){
+                        const newQuantity = item.quantity + 1;
+                        const newItemTotal = item.itemTotal + item.totalPrice
+                        return {...item, quantity: newQuantity, itemTotal: newItemTotal}
+                    }
+                })
+            }else{
+                updatedCart.items.push({
+                        productId: orderData._id,
+                        title: orderData.title,
+                        brand: orderData.brand,
+                        category: orderData.category,
+                        description: orderData.description,
+                        price: orderData.price,
+                        quantity: 1,
+                        imageUrl: orderData.images[0],
+                        discountPercentage: orderData.discountPercentage || 0,
+                        totalPrice: orderData.price - (orderData.price * (orderData.discountPercentage || 0) / 100),
+                        itemTotal: orderData.price - (orderData.price * (orderData.discountPercentage || 0) / 100),
+
+                    })
+            }
+
+            let newPriceDetails = {...updatedCart.priceDetails}
+            newPriceDetails.subTotal = updatedCart.items.reduce((acc, item) => acc + item.itemTotal, 0)
+            newPriceDetails.total = newPriceDetails.subTotal + newPriceDetails.tax + newPriceDetails.shipping - newPriceDetails.discount
+
+            updatedCart.priceDetails = newPriceDetails
+
+            const res = await models.cartModel.findOneAndUpdate({ authUserId: orderData.authUserId }, updatedCart, { new: true });
+
+            return res
         }
-        // if(cart){
-        //     const existingItems = cart.items;
-        //     const newItems = orderData.items;
-        //     const updatedItems = [...existingItems];
-
-        //     newItems.forEach(newItem => {
-        //         const index = updatedItems.findIndex(item => item.productId === newItem.productId);
-        //         if (index !== -1) {
-        //             updatedItems[index].quantity += newItem.quantity;
-        //             updatedItems[index].totalPrice += newItem.totalPrice;
-        //         } else {
-        //             updatedItems.push(newItem);
-        //         }
-        //     });
-        //     orderData.items = updatedItems;
-        //     orderData.totalAmount = updatedItems.reduce((total, item) => total + item.totalPrice, 0);
-        //     const res = await models.cartModel.findOneAndUpdate({ authUserId: orderData.authUserId }, orderData, { new: true });
-        //     return res;
-        // }else{
-        //     orderData.totalAmount = orderData.items.reduce((total, item) => total + item.totalPrice, 0);
-        //     orderData.priceDetails = {
-        //         price: orderData.items.reduce((total, item) => total + item.price * item.quantity, 0),
-        //         tax: 0,
-        //         shipping: 0,
-        //         discount: orderData.items.reduce((total, item) => total + item.discount, 0),
-        //         total: orderData.totalAmount,
-        //     };
-        //     orderData.meta = {
-        //         createdAt: new Date(),
-        //         updatedAt: new Date(),
-        //     };
-        //     const res = await new models.cartModel(orderData).save();
-        //     return res;
-        // }
-
-        return orderData
-
     }
     catch (err) {
+        console.log('Error in addToCart service:', err)
         throw new Error('Error creating cart');
     }
 }

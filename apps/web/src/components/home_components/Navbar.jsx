@@ -70,14 +70,14 @@ const Navbar = () => {
 
   return (
     <>
-      <div className='bg-background px-5 py-2 sticky top-0 z-50 w-full grid items-center border-b border-border sm:grid-cols-6'>
+      <div className='bg-background px-5 py-2 sticky top-0 z-50 w-full grid items-center border-b border-border sm:grid-cols-3'>
         <Link href={"/"} className='text-xl  font-extrabold text-primary'>QuickBuy</Link>
-        <div className='col-span-4 flex items-center justify-center'>
+        <div className='col-span- flex items-center justify-center'>
           <SearchBar searchQuery={searchQuery} setSearchQuery={setSearchQuery}
             searchResults={searchResults} setSearchResults={setSearchResults} debounced={debounced}
           />
         </div>
-        <div className='flex justify-end gap-16 items-center'>
+        <div className='flex col-span- justify-end gap-16 items-center'>
           <Link href={"/cart"} title='Shopping Cart'><ShoppingCart title="Shopping Cart" /></Link>
           <Link href={"/wishlist"} title='wishlist'><Heart title="wishlist" /></Link>
           <Link href={"/wishlist"} title='wishlist'><ShoppingBag title="wishlist" /></Link>

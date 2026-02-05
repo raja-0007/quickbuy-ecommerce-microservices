@@ -1,31 +1,13 @@
 import services from "./service.js";
 
-const getAllOrders = async (req, res) =>{
+const getCart = async (req, res) =>{
     try{
-        const orders = await services.getAllOrders()
-        res.status(200).json(orders)
+        console.log('Fetching cart for user:', req.params.userId)
+        const cart = await services.getCart(req.params.userId)
+        res.status(200).json(cart)
     }catch(err){
         res.status(500).json({error: err.message})
-    }
-    
-}
 
-const getMyOrders = async (req, res) =>{
-    try{
-        const orders = await services.getMyOrders(req.params.userId)
-        res.status(200).json(orders)
-    }catch(err){
-        res.status(500).json({error: err.message})
-    }
-    
-}
-
-const getOrderById = async (req, res) =>{
-    try{
-        const order = await services.getOrderById(req.params.orderId)
-        res.status(200).json(order)
-    }catch(err){
-        res.status(500).json({error: err.message})
     }
 }
 
@@ -61,6 +43,6 @@ const deleteOrder = async (req, res) =>{
 
 
 const controllers = {
-    getAllOrders, getMyOrders, getOrderById, addToCart, updateOrder, deleteOrder
+    getCart, addToCart, updateOrder, deleteOrder
 }
 export default controllers;

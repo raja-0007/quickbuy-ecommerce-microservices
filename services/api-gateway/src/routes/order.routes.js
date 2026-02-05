@@ -14,5 +14,6 @@ router.put('/updateOrder/:orderId',authMiddleware, roleCheck(['admin', 'seller']
 router.delete('/deleteOrder/:orderId',authMiddleware, roleCheck(['admin']), controllers.deleteOrder);
 
 router.post('/cart/addToCart',authMiddleware, cartControllers.addToCart);
+router.get('/cart/getCart',authMiddleware, cartControllers.getCart);
 
 module.exports = router;

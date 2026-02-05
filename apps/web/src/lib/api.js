@@ -32,7 +32,7 @@ axiosHandle.interceptors.response.use(
         return response;
     },
     (error)=>{
-        // console.log('Response error:', error.response);
+        console.log('Response error:', error.response);
         if(error.response && error.response.status === 401){
             // Handle unauthorized access, e.g., redirect to login
             console.log('Unauthorized! Redirecting to login...');
