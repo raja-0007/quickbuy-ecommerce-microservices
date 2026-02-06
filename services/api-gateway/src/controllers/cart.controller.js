@@ -19,6 +19,29 @@ const addToCart = async(req, res) => {
     }
 }
 
+const updateCartItem = async(req, res) => {
+    try{
+        const resp = await axios.put(`${process.env.ORDER_BASE_URL}/cart/updateCartItem`, { authUserId: req.userId, updatedItem: req.body });
+        res.status(resp.status).json(resp.data);
+    }catch(err){
+        res.status(err.status).json({ error: err.message });
+    }
+}
+
+const deleteCartItem = async(req, res) => {
+    try{
+        const resp = await axios.delete(`${process.env.ORDER_BASE_URL}/cart/deleteCartItem`, {
+            params:{
+                authUserId: req.userId,
+                productId: req.params.productId
+            }
+        });
+        res.status(resp.status).json(resp.data);
+    }catch(err){
+        res.status(err.status).json({ error: err.message });
+    }
+}
+
 module.exports = {
-    getCart, addToCart
+    getCart, addToCart, updateCartItem, deleteCartItem
 };

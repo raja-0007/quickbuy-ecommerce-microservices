@@ -15,7 +15,7 @@ router.get('/get-products', productController.getAllProducts);
 
 router.get('/search-products', productController.searchProducts);
 
-router.get('/products/:id', productController.getProductById);
+router.get('/getProduct/:id', productController.getProductById);
 
 router.post('/add-product', authMiddleware, roleCheck(['admin', 'seller']), productController.addProduct);
 

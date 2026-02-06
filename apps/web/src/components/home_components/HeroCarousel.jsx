@@ -21,9 +21,10 @@ export function HeroCarousel() {
     ]
 
   return (
-    <div className="relative w-full">
-    <Carousel className="w-full">
-      <CarouselContent className={'h-[600px] -ml-[0]'}>
+    <div className="relative w-full z-0">
+    <Carousel className="w-full z-0 
+    ">
+      <CarouselContent className={'h-[600px] -ml-[0] z-0'}>
         {imagesArray.map((img, index) => (
           <CarouselItem key={index} className={'pl-0'}>
             <div className="p- h-full">
@@ -36,7 +37,7 @@ export function HeroCarousel() {
           </CarouselItem>
         ))}
       </CarouselContent>
-      <CarouselPrevious />
+      <CarouselPrevious/>
       <CarouselNext />
     </Carousel>
     <div className="bg-gradient-to-b z-10 from-transparent to-background pointer-events-none h-[400px] w-full absolute bottom-0"></div>

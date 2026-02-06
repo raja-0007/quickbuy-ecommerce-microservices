@@ -8,7 +8,7 @@ router.get('/categories', controllers.getCategories)
 
 router.get('/get-products', controllers.getAllProducts)
 router.get('/search-products', controllers.searchProducts)
-router.get('/products/:id', controllers.getProductById)
+router.get('/getProduct/:id', controllers.getProductById)
 
 router.post('/add-product', controllers.addProduct)
 

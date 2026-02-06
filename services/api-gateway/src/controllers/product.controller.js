@@ -50,7 +50,7 @@ const searchProducts = async(req, res) => {
 
 const getProductById = async(req, res)=>{
     try{
-        const resp = await axios.get(`${process.env.PRODUCT_BASE_URL}/products/${req.params.id}`);
+        const resp = await axios.get(`${process.env.PRODUCT_BASE_URL}/getProduct/${req.params.id}`);
         // console.log('get products called', resp.data);
         res.status(resp.status).json(resp.data);
 

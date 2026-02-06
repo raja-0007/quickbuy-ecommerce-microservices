@@ -115,10 +115,23 @@ const getCategories = async () => {
     }
 }
 
+const getProductById = async (productId) => {
+    try {
+        const product = await models.productModel.findById(productId)
+        // console.log('Fetched product:', product);
+        // console.log('Product ID:', productId);
+        return product;
+    } catch (err) {
+        console.log(err);
+        throw new Error('Error fetching product');
+    }
+}
+
 const productServices = {
     getAllProducts,
     getHomeDeals,
     getCategories,
-    searchProducts
+    searchProducts,
+    getProductById
 }
 module.exports = productServices;

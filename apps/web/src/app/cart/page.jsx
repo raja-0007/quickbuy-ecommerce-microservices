@@ -2,13 +2,15 @@
 
 import React, { useState, useMemo, useEffect } from 'react'
 import Link from 'next/link'
-import { Trash2, Plus, Minus, ChevronLeft, Lock, Truck } from 'lucide-react'
+import { Trash2, Plus, Minus, ChevronLeft, Lock, Truck, CircleCheckBig } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Separator } from '@/components/ui/separator'
 import { useSession } from 'next-auth/react'
 import { axiosHandle } from '@/lib/api'
 import Image from 'next/image'
+import { toast } from 'sonner'
+import customToast from '@/lib/CustomToast'
 
 const CART_ITEMS = [
   {
@@ -76,18 +78,40 @@ const CartPage = () => {
 
   },[status])
 
-  const updateQuantity = (id, newQuantity) => {
-    // if (newQuantity === 0) {
-    //   removeItem(id)
-    // } else {
-    //   setCartItems(
-    //     cartItems.map((item) => (item.id === id ? { ...item, quantity: newQuantity } : item))
-    //   )
-    // }
+  const updateQuantity = async(item, newQuantity) => {
+    if (newQuantity === 0) {
+      removeItem(item.productId) 
+    } else {
+      try{
+        const res = await axiosHandle.put('/orders/cart/updateCartItem', {
+          productId: item.productId,
+          quantity: newQuantity
+        })
+        console.log('Update cart response:', res.data);
+        setCart(res.data.cart)
+        // toast('Cart item updated!', {position: 'top-right', duration: 1500, icon: <CircleCheckBig className='text-green-400 size-5'/> })
+        customToast({message: 'Cart item updated!', type: 'success'})
+        console.log('Updated cart:', res.data.cart)
+      }catch(err){
+        // toast.error('Error updating cart item',  {position: 'top-right', duration: 1500})
+        customToast({message: 'Error updating cart item!', type: 'error'})
+        console.log('Error updating cart item:', err)
+      }
+    }
   }
 
-  const removeItem = (id) => {
+  const removeItem = async(id) => {
     // setCartItems(cartItems.filter((item) => item.id !== id))
+    try{
+      const res = await axiosHandle.delete(`/orders/cart/deleteCartItem/${id}`)
+      console.log('Delete cart item response:', res.data);
+      setCart(res.data.cart)
+      customToast({message: 'Item removed from cart!', type: 'success'})
+      console.log('Updated cart:', res.data.cart)
+    }catch(err){
+      customToast({message: 'Error removing item from cart!', type: 'error'})
+      console.log('Error deleting cart item:', err)
+    }
   }
 
   const handleCheckout = () => {
@@ -172,10 +196,10 @@ const CartPage = () => {
                               {/* Quantity Controls */}
                               <div className="flex items-center gap-2">
                                 <Button
-                                  onClick={() => updateQuantity(item.id, item.quantity - 1)}
+                                  onClick={() => updateQuantity(item, item.quantity - 1)}
                                   variant="outline"
                                   size="sm"
-                                  className="w-8 h-8 p-0 border-border hover:bg-muted"
+                                  className="w-8 h-8 p-0 border-border hover:bg-muted hover:text-muted-foreground"
                                 >
                                   <Minus size={14} />
                                 </Button>
@@ -183,10 +207,10 @@ const CartPage = () => {
                                   {item.quantity}
                                 </span>
                                 <Button
-                                  onClick={() => updateQuantity(item.id, item.quantity + 1)}
+                                  onClick={() => updateQuantity(item, item.quantity + 1)}
                                   variant="outline"
                                   size="sm"
-                                  className="w-8 h-8 p-0 border-border hover:bg-muted"
+                                  className="w-8 h-8 p-0 border-border hover:bg-muted hover:text-muted-foreground"
                                 >
                                   <Plus size={14} />
                                 </Button>
@@ -278,7 +302,7 @@ const CartPage = () => {
                   <Button
                     asChild
                     variant="outline"
-                    className="w-full border-border hover:bg-muted bg-transparent"
+                    className="w-full border-border text- hover:text-secondary-foreground"
                   >
                     <Link href="/search">Continue Shopping</Link>
                   </Button>

@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect } from 'react'
-import { Star, Heart, Filter, ChevronDown, Grid, Sliders } from 'lucide-react'
+import { Star, Heart, Filter, ChevronDown, Grid, Sliders, Check, CircleCheckBig } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -13,6 +13,7 @@ import { Slider } from '@/components/ui/slider'
 import { Input } from '@/components/ui/input'
 import Link from 'next/link'
 import { axiosHandle } from '@/lib/api'
+import customToast from '@/lib/CustomToast'
 
 // Sample products data
 const PRODUCTS = [
@@ -74,10 +75,11 @@ const SearchResults = () => {
             console.log("Adding to cart", product)
             const response = await axiosHandle.post('/orders/cart/addToCart', product)
             console.log("Add to cart response", response.data)
-            toast.success("Product added to cart!", { position: "top-right" })
+            customToast({message: "Product added to cart!", type: "success"})
+            
         }catch(err){
             console.log(err)
-            toast.error("Failed to add product to cart!", { position: "top-right" })
+            customToast({message: "Failed to add product to cart!", type: "error"})
         }
 
     }
@@ -266,7 +268,7 @@ const SearchResults = () => {
                                     const isFavorited = wishlist.has(product.id)
 
                                     return (
-                                        <Link href={`/product/${product.id}`} key={product.id}>
+                                        <Link href={`/product/${product._id}`} key={product._id}>
                                             <Card
 
                                                 className="group overflow-hidden border-border hover:border-primary transition-all hover:shadow-lg py-0"

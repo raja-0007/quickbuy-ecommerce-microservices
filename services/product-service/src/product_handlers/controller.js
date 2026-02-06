@@ -43,7 +43,15 @@ const searchProducts = async(req, res) =>{
 }
 const getProductById = async(req, res) =>{
     console.log("Get all products");
-    res.status(200).json({ product: {id:1} });
+    // res.status(200).json({ product: {id:1} });
+    try{
+        const { id } = req.params;
+        const response = await productServices.getProductById(id);
+
+        res.status(200).json({ product: response });
+    }catch(err){
+        res.status(500).json({ error: err.message });
+    }
 }
 
 const addProduct = async(req, res) =>{

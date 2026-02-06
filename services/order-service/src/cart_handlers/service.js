@@ -50,36 +50,36 @@ const addToCart = async (orderData) => {
             await newCart.save();
             return newCart;
         }
-        else{
+        else {
             // Update existing cart
             let updatedCart = cart
             // console.log("Updating existing cart", updatedCart, "cart", cart); 
-            if(updatedCart.items.some(item => item.productId === orderData._id)){
+            if (updatedCart.items.some(item => item.productId === orderData._id)) {
                 updatedCart.items = updatedCart.items.map(item => {
-                    if(item.productId === orderData._id){
+                    if (item.productId === orderData._id) {
                         const newQuantity = item.quantity + 1;
                         const newItemTotal = item.itemTotal + item.totalPrice
-                        return {...item, quantity: newQuantity, itemTotal: newItemTotal}
+                        return { ...item, quantity: newQuantity, itemTotal: newItemTotal }
                     }
                 })
-            }else{
+            } else {
                 updatedCart.items.push({
-                        productId: orderData._id,
-                        title: orderData.title,
-                        brand: orderData.brand,
-                        category: orderData.category,
-                        description: orderData.description,
-                        price: orderData.price,
-                        quantity: 1,
-                        imageUrl: orderData.images[0],
-                        discountPercentage: orderData.discountPercentage || 0,
-                        totalPrice: orderData.price - (orderData.price * (orderData.discountPercentage || 0) / 100),
-                        itemTotal: orderData.price - (orderData.price * (orderData.discountPercentage || 0) / 100),
+                    productId: orderData._id,
+                    title: orderData.title,
+                    brand: orderData.brand,
+                    category: orderData.category,
+                    description: orderData.description,
+                    price: orderData.price,
+                    quantity: 1,
+                    imageUrl: orderData.images[0],
+                    discountPercentage: orderData.discountPercentage || 0,
+                    totalPrice: orderData.price - (orderData.price * (orderData.discountPercentage || 0) / 100),
+                    itemTotal: orderData.price - (orderData.price * (orderData.discountPercentage || 0) / 100),
 
-                    })
+                })
             }
 
-            let newPriceDetails = {...updatedCart.priceDetails}
+            let newPriceDetails = { ...updatedCart.priceDetails }
             newPriceDetails.subTotal = updatedCart.items.reduce((acc, item) => acc + item.itemTotal, 0)
             newPriceDetails.total = newPriceDetails.subTotal + newPriceDetails.tax + newPriceDetails.shipping - newPriceDetails.discount
 
@@ -96,30 +96,56 @@ const addToCart = async (orderData) => {
     }
 }
 
-const updateCart = async (orderId, updateData) => {
+const updateCartItem = async (payload) => {
     try {
-        const res = await models.cartModel.findOneAndUpdate({ _id: orderId }, updateData, { new: true })
+        const cart = await models.cartModel.findOne({ authUserId: payload.authUserId })
+        let cartItems = cart.items
+        cartItems = cartItems.map(item=>{
+            if(item.productId === payload.updatedItem.productId){
+                return {...item, quantity: payload.updatedItem.quantity, itemTotal: (payload.updatedItem.quantity * item.totalPrice)}
+            }else{
+                return item
+            }
+        })
+        let updatedCart = cart
+        updatedCart.items = cartItems
+        let newPriceDetails = { ...updatedCart.priceDetails }
+            newPriceDetails.subTotal = updatedCart.items.reduce((acc, item) => acc + item.itemTotal, 0)
+            newPriceDetails.total = newPriceDetails.subTotal + newPriceDetails.tax + newPriceDetails.shipping - newPriceDetails.discount
+
+            updatedCart.priceDetails = newPriceDetails
+        const res = await models.cartModel.findOneAndUpdate({ authUserId: payload.authUserId}, updatedCart, { new: true })
         return res;
     }
     catch (err) {
-        throw new Error('Error updating cart');
+        throw new Error('Error updating cart item');
     }
 }
 
 
-const deleteCart = async (orderId) => {
+const deleteCartItem = async (payload) => {
     try {
-        const res = await models.cartModel.findOneAndDelete({ _id: orderId })
+        const cart = await models.cartModel.findOne({ authUserId: payload.authUserId })
+        const updatedItems = cart.items.filter(item => item.productId !== payload.productId)
+        let updatedCart = cart
+        updatedCart.items = updatedItems
+        let newPriceDetails = { ...updatedCart.priceDetails }
+            newPriceDetails.subTotal = updatedCart.items.reduce((acc, item) => acc + item.itemTotal, 0)
+            newPriceDetails.total = newPriceDetails.subTotal + newPriceDetails.tax + newPriceDetails.shipping - newPriceDetails.discount
+
+            updatedCart.priceDetails = newPriceDetails
+        const res = await models.cartModel.findOneAndUpdate({ authUserId: payload.authUserId }, updatedCart, { new: true })
         return res;
+
     }
     catch (err) {
-        throw new Error('Error deleting cart');
+        throw new Error('Error deleting cart item');
     }
 }
 
 export default {
     getCart,
     addToCart,
-    updateCart,
-    deleteCart
+    updateCartItem,
+    deleteCartItem
 }

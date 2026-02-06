@@ -22,20 +22,20 @@ const addToCart = async (req, res) =>{
     
 }
 
-const updateOrder = async (req, res) =>{
+const updateCartItem = async (req, res) =>{
     try{
-        const order = await services.updateOrder(req.params.orderId, req.body)
-        res.status(200).json(order)
+        const cart = await services.updateCartItem(req.body)
+        res.status(200).json({message: 'Item updated in cart', cart})
     }catch(err){
         res.status(500).json({error: err.message})
     }
     
 }
 
-const deleteOrder = async (req, res) =>{
+const deleteCartItem = async (req, res) =>{
     try{
-        const order = await services.deleteOrder(req.params.orderId)
-        res.status(200).json(order)
+        const cart = await services.deleteCartItem(req.query)
+        res.status(200).json({message: 'Item deleted from cart', cart})
     }catch(err){
         res.status(500).json({error: err.message})
     }
@@ -43,6 +43,6 @@ const deleteOrder = async (req, res) =>{
 
 
 const controllers = {
-    getCart, addToCart, updateOrder, deleteOrder
+    getCart, addToCart, updateCartItem, deleteCartItem
 }
 export default controllers;

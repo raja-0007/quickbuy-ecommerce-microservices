@@ -1,22 +1,24 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { use, useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-import { Star, Heart, ShoppingCart, ChevronLeft, Truck, Shield, RotateCcw } from 'lucide-react'
+import { Star, Heart, ShoppingCart, ChevronLeft, Truck, Shield, RotateCcw, Check, X } from 'lucide-react'
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
+import { axiosHandle } from '@/lib/api'
+import Image from 'next/image'
 
-// Sample products data - same as in search page
 const PRODUCTS = [
   {
-    id: 125,
+    id: "696f488435b4699c2f11f515",
     title: 'Selfie Lamp with iPhone',
     description: 'Professional selfie lamp with adjustable brightness and color temperature. Perfect for content creators, makeup artists, and social media influencers. Features 360-degree rotation and sturdy phone holder.',
     price: 14.99,
     discountPercentage: 19.4,
     rating: 3.55,
-    reviews: 128,
+    reviews: [],
     stock: 58,
     category: 'mobile-accessories',
     thumbnail: 'https://cdn.dummyjson.com/product-images/110/thumbnail.webp',
@@ -55,12 +57,14 @@ const PRODUCTS = [
 
 export default function ProductDetailPage({ params }) {
   const { id } = React.use(params)
-  const product = PRODUCTS.find((p) => p.id === parseInt(id))
-  const [quantity, setQuantity] = useState(1)
+  const [product, setProduct] = useState(null)
+  const [loading, setLoading] = useState(true)
+  // const product = MOCK_PRODUCT.id === parseInt(id) ? MOCK_PRODUCT : null
+  // const [quantity, setQuantity] = useState(1)
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [selectedImage, setSelectedImage] = useState(0)
 
-  if (!product) {
+  if (!product && !loading) {
     return (
       <div className="min-h-screen bg-background">
         <div className="mx-auto max-w-6xl px-4 py-12">
@@ -75,8 +79,43 @@ export default function ProductDetailPage({ params }) {
     )
   }
 
-  const discountedPrice = product.price - (product.price * product.discountPercentage) / 100
-  const discountAmount = (product.price * product.discountPercentage) / 100
+  const getProduct = async()=>{
+    try{
+      setLoading(true);
+      const res = await axiosHandle.get(`/products/getProduct/${id}`);
+      setProduct(res.data.product);
+      console.log('Product details:', res.data.product);
+      setLoading(false);
+    }catch(err){
+      console.log(err);
+      setLoading(false);
+    }
+  }
+
+  useEffect(()=>{
+    getProduct()
+  },[])
+
+  const discountedPrice = useMemo(()=>{
+    if(!product) return 0;
+    const discount = (product.price * product.discountPercentage) / 100;
+    return product.price - discount;
+  },[product])
+  const discountAmount = useMemo(()=>{
+    if(!product) return 0;
+    return (product.price * product.discountPercentage) / 100;
+  },[product])
+  const totalReviews = useMemo(()=>{
+    if(!product) return 0;
+    return product.reviews.length;
+  },[product])
+  const averageRating = useMemo(()=>{
+    if(!product) return 0;
+    if(product.reviews.length === 0) return 0;
+    const totalRating = product.reviews.reduce((acc, review) => acc + review.rating, 0);
+    return totalRating / product.reviews.length;
+  },[product])
+
 
   const renderStars = (rating) => {
     return Array.from({ length: 5 }).map((_, i) => (
@@ -88,25 +127,47 @@ export default function ProductDetailPage({ params }) {
     ))
   }
 
+  const formatDate = (dateString) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    })
+  }
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="mx-auto max-w-6xl px-4 py-12">
+          <div className="text-center">
+            <h1 className="text-2xl font-bold text-foreground">Loading product details...</h1>
+          </div>
+        </div>
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background">
       <div className="mx-auto max-w-6xl px-4 py-8">
         {/* Back button */}
-        <Link href="/search" className="mb-6 inline-flex items-center gap-2 text-primary hover:underline">
+        {/* <Link href="/search" className="mb-6 inline-flex items-center gap-2 text-primary hover:underline">
           <ChevronLeft size={20} />
           Back to Search
-        </Link>
+        </Link> */}
 
         {/* Product Details */}
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Image Section */}
           <div className="space-y-4">
-            <div className="overflow-hidden rounded-lg border border-border bg-card">
-              <img
-                src={product.images[selectedImage] || "/placeholder.svg"}
+            <div className="overflow-hidden relative rounded-lg border border-border h-96 w-full bg-card">
+              <Image
+              fill
+                src={product.images[selectedImage] || '/placeholder.svg'}
                 alt={product.title}
-                className="h-96 w-full object-cover"
+                className="w-full h-full object-contain transition-transform hover:scale-105"
               />
+              
             </div>
             {/* Image thumbnails */}
             <div className="flex gap-2">
@@ -118,7 +179,7 @@ export default function ProductDetailPage({ params }) {
                     selectedImage === i ? 'border-primary' : 'border-border'
                   }`}
                 >
-                  <img src={img || "/placeholder.svg"} alt={`${product.title} ${i + 1}`} className="h-full w-full object-cover" />
+                  <img src={img || '/placeholder.svg'} alt={`${product.title} ${i + 1}`} className="h-full w-full object-cover transition-transform hover:scale-105" />
                 </button>
               ))}
             </div>
@@ -128,15 +189,17 @@ export default function ProductDetailPage({ params }) {
           <div className="space-y-6">
             {/* Header */}
             <div>
-              <div className="mb-2 flex items-center gap-2">
+              <div className="mb-2 flex items-center gap-2 flex-wrap">
+                
                 <Badge variant="outline" className="border-border text-foreground">
-                  {product.category.replace('-', ' ')}
+                  {product.brand || 'unknown'}
                 </Badge>
                 {product.discountPercentage > 0 && (
-                  <Badge className="bg-accent text-accent-foreground">
-                    {product.discountPercentage}% OFF
-                  </Badge>
+                  <Badge className="bg-accent text-accent-foreground">{product.discountPercentage.toFixed(2)}% OFF</Badge>
                 )}
+                <Badge className={product.stock > 0 ? 'bg-green-600 text-white' : 'bg-destructive text-white'}>
+                  {product.availabilityStatus}
+                </Badge>
               </div>
               <h1 className="mb-2 text-3xl font-bold text-foreground">{product.title}</h1>
               <p className="text-sm text-muted-foreground">SKU: {product.sku}</p>
@@ -144,9 +207,9 @@ export default function ProductDetailPage({ params }) {
 
             {/* Rating */}
             <div className="flex items-center gap-4">
-              <div className="flex gap-1">{renderStars(product.rating)}</div>
-              <span className="text-sm font-semibold text-foreground">{product.rating.toFixed(1)}/5</span>
-              <span className="text-sm text-muted-foreground">({product.reviews} reviews)</span>
+              <div className="flex gap-1">{renderStars(averageRating)}</div>
+              <span className="text-sm font-semibold text-foreground">{averageRating.toFixed(2)}/5</span>
+              <span className="text-sm text-muted-foreground">({totalReviews} reviews)</span>
             </div>
 
             {/* Price */}
@@ -156,9 +219,7 @@ export default function ProductDetailPage({ params }) {
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold text-foreground">${discountedPrice.toFixed(2)}</span>
                     <span className="line-through text-lg text-muted-foreground">${product.price.toFixed(2)}</span>
-                    <span className="text-sm font-semibold text-accent">
-                      Save ${discountAmount.toFixed(2)}
-                    </span>
+                    <span className="text-sm font-semibold text-accent">Save ${discountAmount.toFixed(2)}</span>
                   </div>
                   <p className="text-sm text-muted-foreground">
                     {product.stock > 0 ? (
@@ -167,6 +228,11 @@ export default function ProductDetailPage({ params }) {
                       <span className="text-destructive">Out of stock</span>
                     )}
                   </p>
+                  {product.minimumOrderQuantity > 1 && (
+                    <p className="text-xs text-muted-foreground">
+                      Minimum order quantity: {product.minimumOrderQuantity}
+                    </p>
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -179,11 +245,11 @@ export default function ProductDetailPage({ params }) {
 
             {/* Quantity and Actions */}
             <div className="space-y-3">
-              <div className="flex items-center gap-4">
+              {/* <div className="flex items-center gap-4">
                 <span className="text-sm font-medium text-foreground">Quantity:</span>
                 <div className="flex items-center rounded-lg border border-border bg-background">
                   <button
-                    onClick={() => setQuantity(Math.max(1, quantity - 1))}
+                    onClick={() => setQuantity(Math.max(product.minimumOrderQuantity || 1, quantity - 1))}
                     className="px-3 py-2 text-primary hover:bg-secondary"
                   >
                     −
@@ -196,13 +262,10 @@ export default function ProductDetailPage({ params }) {
                     +
                   </button>
                 </div>
-              </div>
+              </div> */}
 
               <div className="flex gap-3">
-                <Button
-                  disabled={product.stock === 0}
-                  className="flex-1 gap-2 bg-primary hover:bg-primary/90 disabled:opacity-50"
-                >
+                <Button disabled={product.stock === 0} className="flex-1 gap-2 bg-primary hover:bg-primary/90 disabled:opacity-50">
                   <ShoppingCart size={18} />
                   Add to Cart
                 </Button>
@@ -217,31 +280,122 @@ export default function ProductDetailPage({ params }) {
               </div>
             </div>
 
-            {/* Trust Badges */}
+            {/* Key Information */}
             <div className="space-y-3 border-t border-border pt-6">
               <div className="flex items-center gap-3">
-                <Truck size={20} className="text-primary" />
+                <Truck size={20} className="text-primary flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-foreground">Free Delivery</p>
-                  <p className="text-xs text-muted-foreground">On orders over $50</p>
+                  <p className="font-medium text-foreground">Shipping</p>
+                  <p className="text-xs text-muted-foreground">{product.shippingInformation}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <Shield size={20} className="text-primary" />
+                <Shield size={20} className="text-primary flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-foreground">Secure Checkout</p>
-                  <p className="text-xs text-muted-foreground">SSL encrypted payment</p>
+                  <p className="font-medium text-foreground">Warranty</p>
+                  <p className="text-xs text-muted-foreground">{product.warrantyInformation}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
-                <RotateCcw size={20} className="text-primary" />
+                <RotateCcw size={20} className="text-primary flex-shrink-0" />
                 <div>
-                  <p className="font-medium text-foreground">30-Day Returns</p>
-                  <p className="text-xs text-muted-foreground">Hassle-free returns policy</p>
+                  <p className="font-medium text-foreground">Returns</p>
+                  <p className="text-xs text-muted-foreground">{product.returnPolicy}</p>
                 </div>
               </div>
             </div>
           </div>
+        </div>
+
+        {/* Tabs Section - Specifications and Reviews */}
+        <div className="mt-12 border-t border-border pt-12">
+          <Tabs defaultValue="specifications" className="w-full">
+            <TabsList className="border-b border-border bg-transparent">
+              <TabsTrigger value="specifications" className="text-foreground">
+                Specifications
+              </TabsTrigger>
+              <TabsTrigger value="reviews" className="text-foreground">
+                Reviews ({totalReviews})
+              </TabsTrigger>
+            </TabsList>
+
+            {/* Specifications Tab */}
+            <TabsContent value="specifications" className="mt-6 space-y-4">
+              <div className="grid gap-4 sm:grid-cols-2">
+                <Card className="border-border bg-card">
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-muted-foreground">Brand</p>
+                    <p className="font-semibold text-foreground">{product.brand || 'unknown'}</p>
+                  </CardContent>
+                </Card>
+                <Card className="border-border bg-card">
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-muted-foreground">Weight</p>
+                    <p className="font-semibold text-foreground">{product.weight}g</p>
+                  </CardContent>
+                </Card>
+                <Card className="border-border bg-card">
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-muted-foreground">Dimensions (W×H×D)</p>
+                    <p className="font-semibold text-foreground">
+                      {product?.dimensions?.width} × {product?.dimensions?.height} × {product?.dimensions?.depth} cm
+                    </p>
+                  </CardContent>
+                </Card>
+                <Card className="border-border bg-card">
+                  <CardContent className="pt-6">
+                    <p className="text-xs text-muted-foreground">Category</p>
+                    <p className="font-semibold text-foreground capitalize">{product.category.replace('-', ' ')}</p>
+                  </CardContent>
+                </Card>
+              </div>
+
+              {/* Tags */}
+              {/* <div className="pt-4">
+                <p className="mb-3 font-semibold text-foreground">Tags</p>
+                <div className="flex flex-wrap gap-2">
+                  {product.tags.map((tag) => (
+                    <Badge key={tag} variant="outline" className="border-border text-foreground">
+                      {tag}
+                    </Badge>
+                  ))}
+                </div>
+              </div> */}
+            </TabsContent>
+
+            {/* Reviews Tab */}
+            <TabsContent value="reviews" className="mt-6 space-y-6">
+              <div className="mb-6">
+                <div className="flex items-center gap-4">
+                  <div>
+                    <p className="text-4xl font-bold text-foreground">{averageRating.toFixed(1)}</p>
+                    <div className="mt-1 flex gap-1">{renderStars(averageRating)}</div>
+                    <p className="mt-1 text-sm text-muted-foreground">Based on {totalReviews} reviews</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-4">
+                {product.reviews.map((review) => (
+                  <Card key={review._id} className="border-border bg-card">
+                    <CardContent className="pt-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="mb-2 flex items-center gap-3">
+                            <div className="flex gap-1">{renderStars(review.rating)}</div>
+                            <span className="text-sm font-semibold text-foreground">{review.rating}/5</span>
+                          </div>
+                          <p className="font-semibold text-foreground">{review.reviewerName}</p>
+                          <p className="text-xs text-muted-foreground">{formatDate(review.date)}</p>
+                          <p className="mt-3 text-sm text-muted-foreground">{review.comment}</p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+              </div>
+            </TabsContent>
+          </Tabs>
         </div>
 
         {/* Related Products Section */}
