@@ -15,6 +15,10 @@ import {
   DialogTitle,
 } from '@/components/ui/dialog'
 import { Edit2, LogOut, MapPin, CreditCard, ShoppingBag, Clock, ChevronRight, Plus, Trash2, Eye, EyeOff } from 'lucide-react'
+import { useSession } from 'next-auth/react'
+import { axiosHandle } from '@/lib/api'
+import Image from 'next/image'
+import { useSearchParams } from 'next/navigation'
 
 const MOCK_USER = {
   id: '1',
@@ -104,6 +108,21 @@ export default function ProfilePage() {
   const [editingAddressId, setEditingAddressId] = useState(null)
   const [editingPaymentId, setEditingPaymentId] = useState(null)
   const [mounted,setMounted]=useState(false)
+  const {data: session, status} = useSession()
+  const [orders, setOrders] = useState([])
+  const params = useSearchParams()
+
+  useEffect(()=>{
+    if(status !== 'loading' && params){
+      const tab = params.get('tab')
+      if(tab){
+        if(tab == 'orders'){
+          const element = document.getElementById('orders')
+          element?.scrollIntoView({behavior: 'smooth', block: 'start'})
+        }
+      }
+    }
+  },[status, params])
   const [addressForm, setAddressForm] = useState({
     type: 'Home',
     street: '',
@@ -117,6 +136,8 @@ export default function ProfilePage() {
     last4: '',
     expiry: '',
   })
+
+
 
   // Profile CRUD operations
   const handleUpdateProfile = () => {
@@ -265,7 +286,26 @@ export default function ProfilePage() {
     setMounted(true)
   },[])
 
-  if(!mounted) return null
+
+  const getOrders = async () =>{
+    try{
+      const res = await axiosHandle.get(`/orders/getUserOrders`)
+      console.log('Fetched orders:', res.data)
+      setOrders(res.data)
+    }catch(err){
+      console.log('Error fetching orders:', err)
+    }
+  }
+  useEffect(() => {
+      if (status !== 'loading') {
+  
+        getOrders()
+      }
+  
+    }, [status])
+
+
+  if(!mounted || status == 'loading') return null
 
   return (
     <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
@@ -454,21 +494,167 @@ export default function ProfilePage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <div className="space-y-3">
-                  {MOCK_ORDERS.map((order) => (
-                    <div key={order.id} className="flex items-center justify-between rounded-lg border border-border bg-background p-4">
-                      <div>
-                        <p className="font-medium text-foreground">{order.id}</p>
-                        <div className="mt-1 flex items-center gap-2">
-                          <Clock size={14} className="text-muted-foreground" />
-                          <span className="text-sm text-muted-foreground">
-                            {new Date(order.date).toLocaleDateString()}
-                          </span>
+                <div id='orders' className="space-y-3 scroll-mt-[100px]">
+                  {orders.map((order) => (
+                    <div key={order._id} className="rounded-lg border border-border bg-background p-4">
+                      {/* Order Header */}
+                      <div className="flex items-center justify-between mb-4">
+                        <div>
+                          <p className="font-semibold text-foreground">Order ID: {order._id.slice(0, 8)}</p>
+                          <div className="mt-1 flex items-center gap-2">
+                            <Clock size={14} className="text-muted-foreground" />
+                            <span className="text-sm text-muted-foreground">
+                              {new Date(order.createdAt).toLocaleDateString('en-US', {
+                                year: 'numeric',
+                                month: 'short',
+                                day: 'numeric',
+                              })}
+                            </span>
+                          </div>
+                        </div>
+                        <Badge
+                          className={`${
+                            order.status === 'DELIVERED'
+                              ? 'bg-green-500 text-white'
+                              : 'bg-amber-500 text-white'
+                          }`}
+                        >
+                          {order.status === 'DELIVERED' ? 'Delivered' : 'Processing'}
+                        </Badge>
+                      </div>
+
+                      {/* Order Items Grid */}
+                      <div className="mb-4 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5">
+                        {order.items.map((item, idx) => (
+                          <div key={idx} className="group flex flex-col rounded-lg border border-border bg-muted/50 p-3 transition-all hover:border-primary hover:shadow-md">
+                            {/* Product Image */}
+                            <div className="relative mb-2 overflow-hidden rounded bg-background">
+                              <div className='w-full h-24 relative'>
+
+                              <Image
+                                src={item.imageUrl || "/placeholder.svg"}
+                                alt={item.title}
+                                fill
+                                className=" object-contain transition-transform group-hover:scale-105"
+                                
+                              />
+                              </div>
+                              
+                              {item.discountPercentage > 0 && (
+                                <div className="absolute top-1 right-1 rounded bg-accent px-1.5 py-0.5 text-xs font-semibold text-accent-foreground">
+                                  -{item.discountPercentage.toFixed(0)}%
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Product Info */}
+                            <div className="flex flex-1 flex-col">
+                              <p className="text-xs font-semibold text-foreground line-clamp-2">{item.title}</p>
+                              <p className="mt-0.5 text-xs text-muted-foreground">{item.brand}</p>
+                              <p className="mt-1 text-xs font-medium text-primary">Qty: {item.quantity}</p>
+                              
+                              {/* Price */}
+                              <div className="mt-auto pt-2">
+                                <p className="text-xs font-bold text-foreground">
+                                  ₹{item.totalPrice.toFixed(2)}
+                                </p>
+                              </div>
+                            </div>
+
+                            {/* Action Buttons */}
+                            <div className="mt-2 flex flex-col gap-1">
+                              <Button
+                                size="sm"
+                                variant="outline"
+                                className="h-7 text-xs border-primary text-primary hover:text-foreground hover:bg-primary/10 bg-transparent"
+                              >
+                                View
+                              </Button>
+                              {order.status === 'DELIVERED' && (
+                                <Button
+                                  size="sm"
+                                  className="h-7 text-xs bg-accent hover:bg-accent/90 text-accent-foreground"
+                                >
+                                  Buy
+                                </Button>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      {/* Price Summary & Payment */}
+                      <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                        {/* Price Details */}
+                        <div className="rounded-lg bg-muted/30 p-3">
+                          <div className="space-y-1 text-xs">
+                            <div className="flex justify-between">
+                              <span className="text-muted-foreground">Subtotal</span>
+                              <span className="text-foreground font-medium">₹{order.priceDetails.subTotal.toFixed(2)}</span>
+                            </div>
+                            {order.priceDetails.tax > 0 && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Tax</span>
+                                <span className="text-foreground font-medium">₹{order.priceDetails.tax.toFixed(2)}</span>
+                              </div>
+                            )}
+                            {order.priceDetails.shipping > 0 && (
+                              <div className="flex justify-between">
+                                <span className="text-muted-foreground">Shipping</span>
+                                <span className="text-foreground font-medium">₹{order.priceDetails.shipping.toFixed(2)}</span>
+                              </div>
+                            )}
+                            <div className="border-t border-border pt-1 flex justify-between font-semibold">
+                              <span className="text-foreground">Total</span>
+                              <span className="text-primary text-sm">₹{order.priceDetails.total.toFixed(2)}</span>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Payment Info */}
+                        <div className="rounded-lg bg-muted/30 p-3">
+                          <div className="space-y-1 text-xs">
+                            <div className="flex items-center justify-between">
+                              <span className="text-muted-foreground">Payment</span>
+                              <span className="text-foreground font-medium">{order.paymentDetails.method}</span>
+                            </div>
+                            <div className="flex items-center justify-between">
+                              <span className="text-muted-foreground">Status</span>
+                              <Badge variant="outline" className="h-5 border-primary text-primary text-xs">
+                                {order.paymentDetails.status}
+                              </Badge>
+                            </div>
+                          </div>
                         </div>
                       </div>
-                      <div className="text-right">
-                        <p className="font-semibold text-foreground">${order.total.toFixed(2)}</p>
-                        <Badge className="mt-1 bg-primary text-primary-foreground">{order.status}</Badge>
+
+                      {/* Payment Info */}
+                      <div className="mt-3 flex items-center justify-between rounded bg-muted p-2 text-xs">
+                        <span className="text-muted-foreground">
+                          Paid via {order.paymentDetails.method}
+                        </span>
+                        <Badge variant="outline" className="border-primary text-primary">
+                          {order.paymentDetails.status}
+                        </Badge>
+                      </div>
+
+                      {/* Order Actions */}
+                      <div className="mt-3 flex gap-2">
+                        {order.status === 'DELIVERED' ? (
+                          <Button
+                            size="sm"
+                            className="flex-1 bg-primary hover:bg-primary/90 text-sm"
+                          >
+                            Buy All Items Again
+                          </Button>
+                        ) : (
+                          <Button
+                            size="sm"
+                            className="flex-1 bg-accent hover:bg-accent/90 text-accent-foreground text-sm"
+                          >
+                            Check Delivery Status
+                          </Button>
+                        )}
                       </div>
                     </div>
                   ))}

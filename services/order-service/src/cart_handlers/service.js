@@ -143,9 +143,21 @@ const deleteCartItem = async (payload) => {
     }
 }
 
+const clearCart = async (payload) => {
+    try {
+        const res = await models.cartModel.findOneAndUpdate({ authUserId: payload }, { items: [], priceDetails: { subTotal: 0, tax: 0, shipping: 0, discount: 0, total: 0 } }, { new: true })
+        return res;
+    }
+    catch (err) {
+        throw new Error('Error clearing cart');
+    }
+}
+
+
 export default {
     getCart,
     addToCart,
     updateCartItem,
-    deleteCartItem
+    deleteCartItem,
+    clearCart
 }

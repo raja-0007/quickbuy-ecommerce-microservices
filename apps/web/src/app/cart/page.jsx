@@ -11,6 +11,8 @@ import { axiosHandle } from '@/lib/api'
 import Image from 'next/image'
 import { toast } from 'sonner'
 import customToast from '@/lib/CustomToast'
+import Razorpay from 'razorpay'
+import { useRouter } from 'next/navigation'
 
 const CART_ITEMS = [
   {
@@ -43,6 +45,7 @@ const CartPage = () => {
   // const [cartItems, setCartItems] = useState([])
   const [cart, setCart] = useState(null)
   const { data: session, status } = useSession()
+  const router = useRouter()
 
   const { subtotal, discount, tax, total } = useMemo(() => {
     const subtotal = cart?.items.reduce((sum, item) => {
@@ -70,19 +73,19 @@ const CartPage = () => {
       console.log('Error fetching cart:', error);
     }
   }
-  useEffect(()=>{
-    if(status !== 'loading'){
+  useEffect(() => {
+    if (status !== 'loading') {
 
       getCart()
     }
 
-  },[status])
+  }, [status])
 
-  const updateQuantity = async(item, newQuantity) => {
+  const updateQuantity = async (item, newQuantity) => {
     if (newQuantity === 0) {
-      removeItem(item.productId) 
+      removeItem(item.productId)
     } else {
-      try{
+      try {
         const res = await axiosHandle.put('/orders/cart/updateCartItem', {
           productId: item.productId,
           quantity: newQuantity
@@ -90,32 +93,118 @@ const CartPage = () => {
         console.log('Update cart response:', res.data);
         setCart(res.data.cart)
         // toast('Cart item updated!', {position: 'top-right', duration: 1500, icon: <CircleCheckBig className='text-green-400 size-5'/> })
-        customToast({message: 'Cart item updated!', type: 'success'})
+        customToast({ message: 'Cart item updated!', type: 'success' })
         console.log('Updated cart:', res.data.cart)
-      }catch(err){
+      } catch (err) {
         // toast.error('Error updating cart item',  {position: 'top-right', duration: 1500})
-        customToast({message: 'Error updating cart item!', type: 'error'})
+        customToast({ message: 'Error updating cart item!', type: 'error' })
         console.log('Error updating cart item:', err)
       }
     }
   }
 
-  const removeItem = async(id) => {
+  const removeItem = async (id) => {
     // setCartItems(cartItems.filter((item) => item.id !== id))
-    try{
+    try {
       const res = await axiosHandle.delete(`/orders/cart/deleteCartItem/${id}`)
       console.log('Delete cart item response:', res.data);
       setCart(res.data.cart)
-      customToast({message: 'Item removed from cart!', type: 'success'})
+      customToast({ message: 'Item removed from cart!', type: 'success' })
       console.log('Updated cart:', res.data.cart)
-    }catch(err){
-      customToast({message: 'Error removing item from cart!', type: 'error'})
+    } catch (err) {
+      customToast({ message: 'Error removing item from cart!', type: 'error' })
       console.log('Error deleting cart item:', err)
     }
   }
 
-  const handleCheckout = () => {
+  const handleCheckout = async () => {
     console.log('Proceeding to checkout with total:', total)
+    try {
+      const res = await axiosHandle.post('/orders/createOrder', {
+        // totalAmount: 1,
+        totalAmount: cart?.priceDetails?.total?.toFixed(2),
+      })
+      console.log('Checkout response:', res.data, process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID);
+      const options = {
+        key: process.env.NEXT_PUBLIC_RAZORPAY_KEY_ID, // Replace with your Razorpay key_id
+        amount: res.data.amount_due, // Amount is in currency subunits.
+        currency: 'INR',
+        name: 'QuickBuy',
+        description: 'Pay securely using UPI, Debit/Credit Cards, Net Banking, and Wallets. All transactions are encrypted and processed safely.',
+        order_id: res.data.id, // This is the order_id created in the backend
+        // callback_url: 'http://localhost:3000/payment-success', // Your success URL
+        handler: async (response) => {
+          console.log('Payment successful:', response)
+          if(response.razorpay_payment_id){
+          customToast({ message: 'Payment successful!', type: 'success' })
+          try {
+            const confirmOrder = await axiosHandle.post('/orders/orderConfirmation', {
+              orderData: cart,
+              paymentDetails: { ...response, payment_id: response.razorpay_payment_id }
+            })
+            const clearCart = await axiosHandle.delete('/orders/cart/clearCart')
+            router.push('/profile?tab=orders')
+            customToast({ message: 'Order confirmation successful! redirecting to home page...', type: 'success' })
+            setCart(null)
+            console.log('Order confirmation response:', confirmOrder.data)
+          } catch (err) {
+            console.log('Error confirming order:', err)
+            customToast({ message: 'Error confirming order!', type: 'error' })
+
+          }
+        }else{
+          customToast({ message: 'Payment failed! Please try again.', type: 'error' })
+        }
+
+        },
+        prefill: {
+          name: session.user.name,
+          email: session.user.email,
+          contact: '9999999999'
+        },
+        theme: {
+          color: '#008c75'
+          // color: '#F37254'
+        },
+      };
+
+      const rzp = new window.Razorpay(options);
+      rzp.open();
+      // rzp.on('payment.success', async (response) => {
+      //   console.log('Payment successful:', response)
+      //   customToast({ message: 'Payment successful!', type: 'success' })
+      //   try {
+      //     const confirmOrder = await axiosHandle.post('/orders/orderConfirmation', {
+      //       orderData: cart,
+      //       paymentDetails: { ...response, payment_id: response.razorpay_payment_id }
+      //     })
+      //     const clearCart = await axiosHandle.delete('/orders/cart/clearCart')
+      //     router.push('/')
+      //     customToast({ message: 'Order confirmation successful! redirecting to home page...', type: 'success' })
+      //     setCart(null)
+      //     console.log('Order confirmation response:', confirmOrder.data)
+      //   }catch(err){
+      //     console.log('Error confirming order:', err)
+      //     customToast({ message: 'Error confirming order!', type: 'error' })
+
+      //   }
+
+
+      // })
+      // rzp.on('payment.failed', function (response) {
+      //   console.log('Payment failed:', response)
+      //   customToast({ message: 'Payment failed! Please try again.', type: 'error' })
+      // })
+
+      // toast('Checkout successful!', {position: 'top-right', duration: 1500, icon: <CircleCheckBig className='text-green-400 size-5'/> })
+      // customToast({message: 'Checkout successful!', type: 'success'})
+      // setCart(null) 
+      // console.log('Order created successfully:', res.data)
+
+    } catch (err) {
+      customToast({ message: 'Error during checkout!', type: 'error' })
+      console.log('Error during checkout:', err)
+    }
   }
 
   return (
@@ -167,7 +256,7 @@ const CartPage = () => {
                             {/* Product Image */}
                             <div className="flex-shrink-0 w-24 h-24  relative bg-muted rounded-lg overflow-hidden">
                               <Image
-                              fill
+                                fill
                                 src={item.imageUrl || "/placeholder.svg"}
                                 alt={item.title}
                                 className="w-full h-full object-cover hover:scale-105 transition-transform"
