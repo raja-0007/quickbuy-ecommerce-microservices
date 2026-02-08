@@ -11,7 +11,7 @@ import { useDebouncedCallback } from 'use-debounce'
 import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useSearchProducts } from '@/contexts/searchProductsContext'
 import Link from 'next/link'
-import { signOut } from 'next-auth/react'
+import { signOut, useSession } from 'next-auth/react'
 
 const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState("")
@@ -20,6 +20,7 @@ const Navbar = () => {
   const router = useRouter()
   const pathname = usePathname()
   const searchParams = useSearchParams()
+  const { data: session, status } = useSession()
 
   useEffect(() => {
     if (searchParams.values().length === 0) return;
@@ -64,7 +65,7 @@ const Navbar = () => {
     }
   }
 
-  if(pathname.includes('/login') || pathname.includes('/register')){
+  if (pathname.includes('/login') || pathname.includes('/register')) {
     return null
   }
 
@@ -79,30 +80,30 @@ const Navbar = () => {
         </div>
         <div className='flex col-span- justify-end gap-16 items-center'>
           <Link href={"/cart"} title='Shopping Cart'><ShoppingCart title="Shopping Cart" /></Link>
-          <Link href={"/wishlist"} title='wishlist'><Heart title="wishlist" /></Link>
-          <Link href={"/wishlist"} title='wishlist'><ShoppingBag title="wishlist" /></Link>
+          <Link href={"/wishlist"} title='Wishlist'><Heart title="Wishlist" /></Link>
+          <Link href={"/orders"} title='Orders'><ShoppingBag title="Orders" /></Link>
           <span title='Profile' className='relative group cursor-pointer'>
-            <Profile />
-            <div className="absolute z-10 hidden group-hover:flex flex-col items-start justify-center bg-card border border-border p-2 rounded-md top-full right-0 mt-0 w-40 shadow-lg">
+            <Profile session={session}/>
+            {session && <div className="absolute z-10 hidden group-hover:flex flex-col items-start justify-center bg-card border border-border p-2 rounded-md top-full right-0 mt-0 w-40 shadow-lg">
 
-        <Link
-          href="/profile"
-          className="flex w-full items-center gap-2 text-sm hover:bg-slate-100 p-2 rounded-md transition-colors"
-        >
-          <User size={16} />
-          <span>My Profile</span>
-        </Link>
+              <Link
+                href="/profile"
+                className="flex w-full items-center gap-2 text-sm hover:bg-secondary hover:text-foreground text-foreground p-2 rounded-md transition-colors"
+              >
+                <User size={16} />
+                <span>My Profile</span>
+              </Link>
 
-        <Link
-          href="#"
-          onClick={()=>signOut()}
-          className="flex w-full items-center gap-2 text-sm hover:bg-slate-100 p-2 rounded-md transition-colors text-red-600"
-        >
-          <LogOut size={16} />
-          <span>Logout</span>
-        </Link>
+              <Link
+                href="#"
+                onClick={() => signOut()}
+                className="flex w-full items-center gap-2 text-sm hover:bg-secondary p-2 rounded-md transition-colors text-red-600"
+              >
+                <LogOut size={16} />
+                <span>Logout</span>
+              </Link>
 
-      </div>
+            </div>}
           </span>
         </div>
         {/* {searchResults.length > 0 && <div className='absolute transition-all duration-200 fade-in w-full h-[300vh] z-[999] bg-black/80'></div>} */}
@@ -161,18 +162,26 @@ function SearchBar({ searchQuery, setSearchQuery, searchResults, setSearchResult
 }
 
 
-function Profile() {
-  return (
-    <Avatar className={"group"}>
+function Profile({ session }) {
+  if(session && session.user && session.user.name){
+    return (
+      <Avatar className={"group"}>
       {/* <AvatarImage
         src="https://github.com/shadcn.png"
         alt="@shadcn"
         className="grayscale"
       /> */}
-      <AvatarFallback>CN</AvatarFallback>
+      <AvatarFallback>{session.user.name[0].toUpperCase()}{session.user?.name[1]?.toUpperCase()}</AvatarFallback>
 
-      
+
     </Avatar>
+    )
+  }
+  return (
+    <Link href={"/login"} className="flex w-full items-center gap-2 text-sm hover:bg-secondary p-2 rounded-md transition-colors text-foreground">
+      <User size={16} />
+      <span>Login</span>
+    </Link>
   )
 }
 

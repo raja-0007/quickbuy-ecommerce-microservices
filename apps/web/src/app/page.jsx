@@ -7,7 +7,7 @@ import { useEffect, useState } from 'react';
 import { axiosHandle } from '@/lib/api';
 
 export default function Home() {
-  const { theme, setTheme } = useTheme()
+  // const { theme, setTheme } = useTheme()
   const [mounted, setMounted] = useState(false)
   const [deals, setDeals] = useState([]);
   const getDeals = async()=>{
@@ -25,27 +25,27 @@ export default function Home() {
     setMounted(true)
   }, [])
 
-  const ToggleTheme = () => {
-    setTheme(theme === 'light' ? 'dark' : 'light')
-  }
+  // const ToggleTheme = () => {
+  //   setTheme(theme === 'light' ? 'dark' : 'light')
+  // }
 
   useEffect(()=>{
     getDeals()
   },[])
 
-  const logout = () => {
-    signOut()
-  }
+  // const logout = () => {
+  //   signOut()
+  // }
 
   // Don't render theme-dependent content until mounted
   if (!mounted) {
     return (
       <div>
         welcome to ecommerce app
-        <br />
+        {/* <br />
         <button onClick={logout} className="bg-emerald-500 text-white p-3 rounded-xl">
           logout
-        </button>
+        </button> */}
       </div>
     )
   }
@@ -55,13 +55,13 @@ export default function Home() {
       {/* <Navbar/> */}
       <LandingPage deals={deals}/>
       {/* <br /> */}
-      <button onClick={logout} className="bg-emerald-500 text-white p-3 rounded-xl">
+      {/* <button onClick={logout} className="bg-emerald-500 text-white p-3 rounded-xl">
         logout
       </button>
       <br />
       <button onClick={ToggleTheme} className="bg-emerald-500 text-white p-3 rounded-xl">
         change theme from {theme}
-      </button>
+      </button> */}
     </div>
   );
 }

@@ -14,11 +14,14 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Edit2, LogOut, MapPin, CreditCard, ShoppingBag, Clock, ChevronRight, Plus, Trash2, Eye, EyeOff } from 'lucide-react'
+import { Edit2, LogOut, MapPin, CreditCard, ShoppingBag, Clock, ChevronRight, Plus, Trash2, Eye, EyeOff, Moon, Sun } from 'lucide-react'
 import { useSession } from 'next-auth/react'
 import { axiosHandle } from '@/lib/api'
 import Image from 'next/image'
 import { useSearchParams } from 'next/navigation'
+import { Switch } from '@/components/ui/switch'
+import { useTheme } from 'next-themes'
+import Link from 'next/link'
 
 const MOCK_USER = {
   id: '1',
@@ -107,22 +110,23 @@ export default function ProfilePage() {
   const [isAddingPayment, setIsAddingPayment] = useState(false)
   const [editingAddressId, setEditingAddressId] = useState(null)
   const [editingPaymentId, setEditingPaymentId] = useState(null)
-  const [mounted,setMounted]=useState(false)
-  const {data: session, status} = useSession()
+  const [mounted, setMounted] = useState(false)
+  const { data: session, status } = useSession()
   const [orders, setOrders] = useState([])
   const params = useSearchParams()
+  const { theme, setTheme } = useTheme()
 
-  useEffect(()=>{
-    if(status !== 'loading' && params){
+  useEffect(() => {
+    if (status !== 'loading' && params) {
       const tab = params.get('tab')
-      if(tab){
-        if(tab == 'orders'){
+      if (tab) {
+        if (tab == 'orders') {
           const element = document.getElementById('orders')
-          element?.scrollIntoView({behavior: 'smooth', block: 'start'})
+          element?.scrollIntoView({ behavior: 'smooth', block: 'start' })
         }
       }
     }
-  },[status, params])
+  }, [status, params])
   const [addressForm, setAddressForm] = useState({
     type: 'Home',
     street: '',
@@ -282,30 +286,40 @@ export default function ProfilePage() {
     )
   }
 
-  useEffect(()=>{
+  useEffect(() => {
     setMounted(true)
-  },[])
+  }, [])
 
 
-  const getOrders = async () =>{
-    try{
+  const getOrders = async () => {
+    try {
       const res = await axiosHandle.get(`/orders/getUserOrders`)
       console.log('Fetched orders:', res.data)
       setOrders(res.data)
-    }catch(err){
+    } catch (err) {
       console.log('Error fetching orders:', err)
     }
   }
   useEffect(() => {
-      if (status !== 'loading') {
-  
-        getOrders()
-      }
-  
-    }, [status])
+    if (status !== 'loading') {
 
+      getOrders()
+    }
 
-  if(!mounted || status == 'loading') return null
+  }, [status])
+
+  const handleThemeToggle = () => {
+    const htmlElement = document.documentElement
+    setTheme(theme === 'light' ? 'dark' : 'light')
+
+    // if (!isDarkMode) {
+    //   htmlElement.classList.add('dark')
+    // } else {
+    //   htmlElement.classList.remove('dark')
+    // }
+  }
+
+  if (!mounted || status == 'loading') return null
 
   return (
     <div className="min-h-screen bg-background py-8 px-4 sm:px-6 lg:px-8">
@@ -513,11 +527,10 @@ export default function ProfilePage() {
                           </div>
                         </div>
                         <Badge
-                          className={`${
-                            order.status === 'DELIVERED'
+                          className={`${order.status === 'DELIVERED'
                               ? 'bg-green-500 text-white'
                               : 'bg-amber-500 text-white'
-                          }`}
+                            }`}
                         >
                           {order.status === 'DELIVERED' ? 'Delivered' : 'Processing'}
                         </Badge>
@@ -531,15 +544,15 @@ export default function ProfilePage() {
                             <div className="relative mb-2 overflow-hidden rounded bg-background">
                               <div className='w-full h-24 relative'>
 
-                              <Image
-                                src={item.imageUrl || "/placeholder.svg"}
-                                alt={item.title}
-                                fill
-                                className=" object-contain transition-transform group-hover:scale-105"
-                                
-                              />
+                                <Image
+                                  src={item.imageUrl || "/placeholder.svg"}
+                                  alt={item.title}
+                                  fill
+                                  className=" object-contain transition-transform group-hover:scale-105"
+
+                                />
                               </div>
-                              
+
                               {item.discountPercentage > 0 && (
                                 <div className="absolute top-1 right-1 rounded bg-accent px-1.5 py-0.5 text-xs font-semibold text-accent-foreground">
                                   -{item.discountPercentage.toFixed(0)}%
@@ -552,7 +565,7 @@ export default function ProfilePage() {
                               <p className="text-xs font-semibold text-foreground line-clamp-2">{item.title}</p>
                               <p className="mt-0.5 text-xs text-muted-foreground">{item.brand}</p>
                               <p className="mt-1 text-xs font-medium text-primary">Qty: {item.quantity}</p>
-                              
+
                               {/* Price */}
                               <div className="mt-auto pt-2">
                                 <p className="text-xs font-bold text-foreground">
@@ -659,6 +672,15 @@ export default function ProfilePage() {
                     </div>
                   ))}
                 </div>
+                {orders.length > 0 && (
+                  <div className="mt-4 flex justify-center">
+                    <Link href="/orders">
+                      <Button className="bg-primary hover:bg-primary/90">
+                        View All Orders
+                      </Button>
+                    </Link>
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
@@ -1044,6 +1066,26 @@ export default function ProfilePage() {
                 <CardTitle className="text-foreground">Preferences</CardTitle>
               </CardHeader>
               <CardContent className="space-y-6">
+                <div className="flex items-center justify-between py-3">
+                  <div className="flex items-center gap-3">
+                    <div className="rounded-lg bg-muted p-2">
+                      {theme=='dark' ? (
+                        <Moon size={20} className="text-primary" />
+                      ) : (
+                        <Sun size={20} className="text-accent" />
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">Theme</p>
+                      <p className="text-sm text-muted-foreground">Switch between light and dark theme</p>
+                    </div>
+                  </div>
+                  <Switch className={'bg-secondary'}
+                    checked={theme == 'dark'}
+                    onCheckedChange={handleThemeToggle}
+                  />
+                </div>
+                <div className="border-t border-border pt-6" />
                 <div className="flex items-center justify-between py-3">
                   <div>
                     <p className="font-medium text-foreground">Email Notifications</p>
