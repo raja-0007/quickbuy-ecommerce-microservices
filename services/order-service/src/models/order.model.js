@@ -18,46 +18,41 @@ const orderSchema = new mongoose.Schema(
         price: Number,
         quantity: Number,
         imageUrl: String,
-        discount: Number,
+        discountPercentage: Number,
         totalPrice: Number,
+        itemTotal: Number,
       },
     ],
 
     priceDetails:{
-        price: Number,
+        subTotal: Number,
         tax: Number,
         shipping: Number,
         discount: Number,
         total: Number,
     },
-
-    totalAmount: {
-      type: Number,
-      required: true,
+    paymentDetails: {
+      paymentId: String,
+      method: String,
+      amount: Number,
+      currency: String,
+      status:{
+        type: String,
+      enum: ['PENDING', 'PAID', 'FAILED'],
+      default: 'PENDING'},
+      createdAt: { type: Date, default: Date.now },
+      updatedAt: { type: Date, default: Date.now },
+      razorpay: Object
+      
     },
-
     status: {
       type: String,
       enum: ['CREATED', 'SHIPPED', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED'],
       default: 'CREATED',
     },
-
-    payment_status: {
-      type: String,
-      enum: ['PENDING', 'COMPLETED', 'FAILED'],
-      default: 'PENDING',
-    },
-
-    meta: {
-      createdAt: Date,
-      updatedAt: Date,
-    },
   },
   {
-    timestamps: {
-      createdAt: 'meta.createdAt',
-      updatedAt: 'meta.updatedAt',
-    },
+    timestamps: true,
   }
 );
 

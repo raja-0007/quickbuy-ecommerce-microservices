@@ -41,8 +41,16 @@ const deleteCartItem = async (req, res) =>{
     }
 }
 
+const clearCart = async (req, res) =>{
+    try{
+        const cart = await services.clearCart(req.query.authUserId)
+        res.status(200).json({message: 'Cart cleared', cart})
+    }catch(err){
+        res.status(500).json({error: err.message})
+    }
+}
 
-const controllers = {
-    getCart, addToCart, updateCartItem, deleteCartItem
+const controllers =  {
+    getCart, addToCart, updateCartItem, deleteCartItem, clearCart
 }
 export default controllers;

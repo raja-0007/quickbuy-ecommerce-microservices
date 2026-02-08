@@ -3,7 +3,7 @@ import { NextResponse } from "next/server"
 import { hasPagePermission } from "./lib/roleCheck"
 
 const publicRoutes = ['/', '/dashboard']
-const privateRoutes = ['/profile']
+const privateRoutes = ['/profile', '/cart', '/wishlist', '/orders' , '/testPage']
 const restrictedRoutes = ['/testPage']
 
 export const middleware = async(req) => {

@@ -12,5 +12,6 @@ router.get('/getCart/:userId', controllers.getCart);
 router.post('/addToCart', controllers.addToCart);
 router.put('/updateCartItem', controllers.updateCartItem);
 router.delete('/deleteCartItem', controllers.deleteCartItem);
+router.delete('/clearCart', controllers.clearCart);
 export default router;
 

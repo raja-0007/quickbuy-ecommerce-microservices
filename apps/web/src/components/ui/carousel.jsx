@@ -203,7 +203,7 @@ function CarouselNext({
       onClick={scrollNext}
       {...props}
     >
-      <ChevronRightIcon className="size-10"/>
+      <ChevronRightIcon />
       <span className="sr-only">Next slide</span>
     </Button>
   )

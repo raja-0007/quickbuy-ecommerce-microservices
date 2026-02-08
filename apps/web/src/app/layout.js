@@ -6,6 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Navbar from "@/components/home_components/Navbar";
 import { SearchProvider } from "@/contexts/searchProductsContext";
 import { Toaster } from "@/components/ui/sonner";
+import Script from "next/script";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -28,6 +29,7 @@ export default function RootLayout({ children }) {
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased`}
       >
+        <Script src="https://checkout.razorpay.com/v1/checkout.js" strategy="afterInteractive"/>
         <ThemeProvider attribute="class" defaultTheme="light" enableSystem storageKey="theme">
           <SessionProvider>
             <SearchProvider>

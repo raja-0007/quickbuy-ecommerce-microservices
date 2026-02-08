@@ -42,6 +42,21 @@ const deleteCartItem = async(req, res) => {
     }
 }
 
+
+const clearCart = async(req, res) => {
+    try{
+        const resp = await axios.delete(`${process.env.ORDER_BASE_URL}/cart/clearCart`, {
+            params:{
+                authUserId: req.userId
+            }
+        });
+        res.status(resp.status).json(resp.data);
+    }catch(err){
+        res.status(err.status).json({ error: err.message });
+    }
+}
+
+
 module.exports = {
-    getCart, addToCart, updateCartItem, deleteCartItem
+    getCart, addToCart, updateCartItem, deleteCartItem, clearCart
 };

@@ -40,6 +40,16 @@ const createOrder = async (req, res) =>{
     
 }
 
+const orderConfirmation = async (req, res) =>{
+    try{
+        const order = await services.orderConfirmation(req.body)
+        res.status(200).json({message: 'Order confirmed', order})
+    }catch(err){
+        res.status(500).json({error: err.message})
+    }
+}
+
+
 const updateOrder = async (req, res) =>{
     try{
         const order = await services.updateOrder(req.params.orderId, req.body)
@@ -61,6 +71,6 @@ const deleteOrder = async (req, res) =>{
 
 
 const controllers = {
-    getAllOrders, getMyOrders, getOrderById, createOrder, updateOrder, deleteOrder
+    getAllOrders, getMyOrders, getOrderById, createOrder, updateOrder, deleteOrder, orderConfirmation
 }
 export default controllers;
