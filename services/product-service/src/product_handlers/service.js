@@ -34,8 +34,8 @@ const searchProducts = async (limit = 10, page = 1, searchQuery = '') => {
         }
 
         const tokens = searchQuery.toLowerCase().split(/\s+/).filter(Boolean);
-
-        return await models.productModel.aggregate([
+        // console.log('Search tokens:', tokens);
+        const products =  await models.productModel.aggregate([
             // 1️⃣ Match ANY token
             {
                 $match: {
@@ -44,7 +44,8 @@ const searchProducts = async (limit = 10, page = 1, searchQuery = '') => {
                             { title: { $regex: token, $options: 'i' } },
                             { description: { $regex: token, $options: 'i' } },
                             { category: { $regex: token, $options: 'i' } },
-                            { tags: { $regex: token, $options: 'i' } }
+                            { tags: { $regex: token, $options: 'i' } },
+
                         ]
                     }))
                 }
@@ -83,6 +84,8 @@ const searchProducts = async (limit = 10, page = 1, searchQuery = '') => {
             { $skip: skip },
             { $limit: limit }
         ]);
+        // console.log('Search results:', products);
+        return products;
     } catch (err) {
         console.log(err);
         throw new Error('Error fetching products');

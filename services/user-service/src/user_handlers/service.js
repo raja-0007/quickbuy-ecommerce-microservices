@@ -21,10 +21,30 @@ const getProfile = async (userId) => {
 
 const createUser = async (userData) => {
     try {
-        const newUser = new models.userModel(userData)
+        console.log('creating user', userData)
+        const newUser = new models.userModel({
+            // 🔗 LINK TO AUTH SERVICE
+            authUserId: userData.authUserId,
+
+            // 👤 PROFILE DATA
+            name: `${userData.firstName} || ${userData?.lastName || ''}`,
+            phone: userData?.phone || '',
+            firstName: userData?.firstName,
+            lastName: userData?.lastName || '',
+            email: userData.email,
+
+            addresses: [],
+
+            // 🧾 METADATA
+            meta: {
+                createdAt: new Date(),
+                updatedAt: new Date(),
+            },
+        })
         const res = await newUser.save()
         return res;
     } catch (err) {
+        console.log(err)
         throw new Error('Error creating user');
     }
 

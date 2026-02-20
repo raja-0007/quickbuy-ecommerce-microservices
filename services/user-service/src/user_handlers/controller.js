@@ -21,6 +21,7 @@ const getProfile = async (req, res) =>{
 
 const createUser = async (req, res) =>{
     try{
+        console.log('going to create user', req.body.authUserId)
         const user = await services.createUser(req.body)
         res.status(200).json(user)
     }catch(err){

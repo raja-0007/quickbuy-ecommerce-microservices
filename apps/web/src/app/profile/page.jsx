@@ -22,6 +22,7 @@ import { useSearchParams } from 'next/navigation'
 import { Switch } from '@/components/ui/switch'
 import { useTheme } from 'next-themes'
 import Link from 'next/link'
+import customToast from '@/lib/CustomToast'
 
 const MOCK_USER = {
   id: '1',
@@ -144,13 +145,42 @@ export default function ProfilePage() {
 
 
   // Profile CRUD operations
-  const handleUpdateProfile = () => {
+  const handleUpdateProfile = async () => {
+    try {
+      let url = ''
+
+
+      let payload = {
+        ...profileForm,
+        firstName: profileForm?.firstName || session.user.name,
+        email: profileForm?.email || session.user.email
+      }
+      let res = null
+      if (!profile) {
+        url = '/users/createUser'
+        res = await axiosHandle.post(url, payload)
+      } else {
+        url = '/users/updateUser'
+        res = await axiosHandle.put(url, payload)
+      }
+      customToast({ message: 'Profile updated successfully!', type: 'success' })
+      setProfile(res.data)
+    } catch (err) {
+      console.log('Error updating profile:', err)
+      customToast({ message: 'Something went wrong, try again later.', type: 'error' })
+    }
     setProfile(profileForm)
     setIsEditingProfile(false)
   }
 
   const handleProfileChange = (e) => {
-    const { id, value } = e.target
+    let { id, value } = e.target
+
+    // For phone field, only allow digits and limit to 10 characters
+    if (id === 'phone') {
+      value = value.replace(/[^0-9]/g, '').slice(0, 10)
+    }
+
     setProfileForm((prev) => ({ ...prev, [id]: value }))
   }
 
@@ -300,10 +330,21 @@ export default function ProfilePage() {
       console.log('Error fetching orders:', err)
     }
   }
+
+  const getProfile = async () => {
+    try {
+      const res = await axiosHandle.get(`/users/getProfile`);
+      console.log('Fetched profile:', res.data);
+      setProfile(res.data);
+    } catch (err) {
+      console.log('Error fetching profile:', err)
+    }
+  }
   useEffect(() => {
     if (status !== 'loading') {
 
       getOrders()
+      getProfile()
     }
 
   }, [status])
@@ -336,20 +377,20 @@ export default function ProfilePage() {
             <div className="flex flex-col items-start gap-6 sm:flex-row sm:items-center sm:justify-between">
               <div className="flex items-center gap-4">
                 <img
-                  src={profile.avatar || "/placeholder.svg"}
-                  alt={`${profile.firstName} ${profile.lastName}`}
+                  src={profile?.avatar || "/placeholder.svg"}
+                  alt={`${profile?.firstName || session.user.name} ${profile?.lastName || ''}`}
                   className="h-16 w-16 rounded-full border-2 border-primary bg-background"
                 />
                 <div>
                   <h2 className="text-2xl font-bold text-foreground">
-                    {profile.firstName} {profile.lastName}
+                    {profile?.firstName || session.user.name} {profile?.lastName}
                   </h2>
-                  <p className="text-muted-foreground">{profile.email}</p>
-                  <p className="text-sm text-muted-foreground">Member since {profile.joinDate}</p>
+                  <p className="text-muted-foreground">{profile?.email || session.user.email}</p>
+                  {/* <p className="text-sm text-muted-foreground">Member since {profile?.createdAt || '-'}</p> */}
                 </div>
               </div>
               <Button
-                onClick={() => setIsEditingProfile(!isEditingProfile)}
+                onClick={() => { setIsEditingProfile(!isEditingProfile); setProfileForm(profile) }}
                 className="gap-2 bg-primary hover:bg-primary/90"
               >
                 <Edit2 size={18} />
@@ -399,23 +440,23 @@ export default function ProfilePage() {
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-2">
                   <div>
                     <p className="text-sm text-muted-foreground">First Name</p>
-                    <p className="mt-1 font-medium text-foreground">{profile.firstName}</p>
+                    <p className="mt-1 font-medium text-foreground">{profile?.firstName || session.user.name}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Last Name</p>
-                    <p className="mt-1 font-medium text-foreground">{profile.lastName}</p>
+                    <p className="mt-1 font-medium text-foreground">{profile?.lastName || '-'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Email</p>
-                    <p className="mt-1 font-medium text-foreground">{profile.email}</p>
+                    <p className="mt-1 font-medium text-foreground">{profile?.email || session.user.email}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Phone</p>
-                    <p className="mt-1 font-medium text-foreground">{profile.phone}</p>
+                    <p className="mt-1 font-medium text-foreground">{profile?.phone || '-'}</p>
                   </div>
                   <div>
                     <p className="text-sm text-muted-foreground">Member Since</p>
-                    <p className="mt-1 font-medium text-foreground">{profile.joinDate}</p>
+                    <p className="mt-1 font-medium text-foreground">{profile?.joinDate || '-'}</p>
                   </div>
                 </div>
               </CardContent>
@@ -436,7 +477,7 @@ export default function ProfilePage() {
                       </Label>
                       <Input
                         id="firstName"
-                        value={profileForm.firstName}
+                        value={profileForm?.firstName || session.user.name}
                         onChange={handleProfileChange}
                         className="mt-1 border-border bg-background text-foreground"
                       />
@@ -447,7 +488,7 @@ export default function ProfilePage() {
                       </Label>
                       <Input
                         id="lastName"
-                        value={profileForm.lastName}
+                        value={profileForm?.lastName || ''}
                         onChange={handleProfileChange}
                         className="mt-1 border-border bg-background text-foreground"
                       />
@@ -460,20 +501,26 @@ export default function ProfilePage() {
                     <Input
                       id="email"
                       type="email"
-                      value={profileForm.email}
+                      readOnly={true}
+                      value={profileForm?.email || session.user.email}
                       onChange={handleProfileChange}
                       className="mt-1 border-border bg-background text-foreground"
                     />
                   </div>
                   <div>
+
                     <Label className="text-foreground" htmlFor="phone">
                       Phone
                     </Label>
                     <Input
                       id="phone"
                       type="tel"
-                      value={profileForm.phone}
+                      inputMode="numeric"
+                      maxLength="10"
+                      placeholder="123-456-7890"
+                      value={profileForm?.phone || ''}
                       onChange={handleProfileChange}
+                      required
                       className="mt-1 border-border bg-background text-foreground"
                     />
                   </div>
@@ -528,8 +575,8 @@ export default function ProfilePage() {
                         </div>
                         <Badge
                           className={`${order.status === 'DELIVERED'
-                              ? 'bg-green-500 text-white'
-                              : 'bg-amber-500 text-white'
+                            ? 'bg-green-500 text-white'
+                            : 'bg-amber-500 text-white'
                             }`}
                         >
                           {order.status === 'DELIVERED' ? 'Delivered' : 'Processing'}
@@ -1069,7 +1116,7 @@ export default function ProfilePage() {
                 <div className="flex items-center justify-between py-3">
                   <div className="flex items-center gap-3">
                     <div className="rounded-lg bg-muted p-2">
-                      {theme=='dark' ? (
+                      {theme == 'dark' ? (
                         <Moon size={20} className="text-primary" />
                       ) : (
                         <Sun size={20} className="text-accent" />

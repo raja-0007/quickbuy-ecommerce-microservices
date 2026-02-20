@@ -3,6 +3,7 @@ import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious
 import { Card, CardContent, CardFooter } from '../ui/card'
 import { axiosHandle } from '@/lib/api'
 import Image from 'next/image'
+import Link from 'next/link'
 
 const ExploreCategories = () => {
 
@@ -27,7 +28,7 @@ const ExploreCategories = () => {
                 <CarouselContent className={' -ml-[0]'}>
                     {categories.map((item, index) => (
                         <CarouselItem key={index} className={'basis-1/6 pl-0'}>
-                            <div className="p- h-full">
+                            <Link href={`/search-results?searchQuery=${item.title}`} className="p- h-full">
                                 <Card className={'h-full py-0 border-0 bg-transparent shadow-none'}>
                                     <CardContent className="relative h-full items-center justify-center p-0">
                                         <div className='w-40 h-40 mx-auto bg-secondary relative rounded-full border'>
@@ -39,7 +40,7 @@ const ExploreCategories = () => {
                                     </CardContent>
                                    
                                 </Card>
-                            </div>
+                            </Link>
                         </CarouselItem>
                     ))}
                 </CarouselContent>

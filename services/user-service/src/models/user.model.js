@@ -13,6 +13,9 @@ const userSchema = new mongoose.Schema(
     // 👤 PROFILE DATA
     name: { type: String, required: true },
     phone: { type: String },
+    firstName: String,
+    lastName: String,
+    email: { type: String, required: true },
 
     addresses: [
       {

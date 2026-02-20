@@ -12,7 +12,7 @@ const getAllOrders = async(req, res) => {
 
 const getMyOrders = async(req, res) => {
     try{
-        console.log('Fetching orders for user: in gateawy', req.userId)
+        // console.log('Fetching orders for user: in gateawy', req.userId)
         const resp = await axios.get(`${process.env.ORDER_BASE_URL}/getUserOrders/${req.userId}`);
         res.status(resp.status).json(resp.data);
     }catch(err){
