@@ -1,26 +1,26 @@
-import React, { useEffect, useState } from 'react'
+import React from 'react'
 import { Carousel, CarouselContent, CarouselItem, CarouselNext, CarouselPrevious } from '../ui/carousel'
-import { Card, CardContent, CardFooter } from '../ui/card'
-import { axiosHandle } from '@/lib/api'
+import { Card, CardContent } from '../ui/card'
 import Image from 'next/image'
 import Link from 'next/link'
 
-const ExploreCategories = () => {
+const ExploreCategories = async () => {
 
-    const [categories, setCategories] = useState([])
+    let categories = []
 
-    const getCategories = async() =>{
-        try{
-            const res = await axiosHandle.get('/products/categories');
-            setCategories(res.data.categories)
-        }catch(err){
-            console.log('Error fetching categories:', err);
-        }
+    try {
+        const res = await fetch(
+            `${process.env.NEXT_PUBLIC_API_URL}/products/categories`,
+            // { cache: 'no-store' },
+            { next: { revalidate: 60 * 60 } }
+        )
+
+        const categoriesResponse = await res.json()
+        categories = categoriesResponse.categories
+
+    } catch (err) {
+        console.log('Error fetching deals:', err)
     }
-
-    useEffect(()=>{
-        getCategories()
-    },[])
     return (
         <div className='mt-36'>
             <div className='font-bold text-lg'>Explore Categories</div>
@@ -38,7 +38,7 @@ const ExploreCategories = () => {
                                             <p className='text-md capitalize'>{item.title.replaceAll('-', ' ')}</p>
                                         </div>
                                     </CardContent>
-                                   
+
                                 </Card>
                             </Link>
                         </CarouselItem>

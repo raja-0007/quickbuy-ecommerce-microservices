@@ -1,0 +1,86 @@
+"use client"
+import React, { useEffect, useState } from 'react'
+import { Card, CardContent, CardFooter, CardHeader } from '../ui/card'
+import Link from 'next/link'
+import Image from 'next/image'
+
+const DealsSection = ({deals}) => {
+
+    const [mounted, setMounted] = useState(false)
+
+    useEffect(() => {
+        setMounted(true)
+    }, [])
+
+    console.log('Deals in LandingPage:', deals);
+    if (!mounted) return null
+    return (
+        <div className='relative w-full'>
+
+            <div className='absolute px-5 w-full bottom-[-60px] h-[400px] bg-gradient-to-b from-transparent to-background
+        z-20 pointer-events-auto grid grid-cols-4 gap-10'>
+                <Card >
+                    <CardHeader className={'text-lg font-black'}>Trending Deals</CardHeader>
+                    <CardContent className={'grid grid-cols-2 gap-5'}>
+                        {deals.trending && deals.trending.slice(0, 4).map((item, index) => (
+                            <Link href={`/product/${item._id}`} key={index} className='flex flex-col items-center justify-center relative'>
+                                <div className='w-20 h-20 relative'>
+                                    <Image fill src={item.images[0]} alt={item.title} className=' object-contain hover:scale-105 transition-transform' />
+                                </div>
+                                <p className='text-sm text-center- mt-1 truncate w-full'>{item.title}</p>
+                            </Link>
+                        ))}
+                    </CardContent>
+                    <CardFooter className={'text-sm text-primary'}>see more</CardFooter>
+                </Card>
+
+                <Card className={''}>
+                    <CardHeader className={'text-lg font-black'}>Best Sellers</CardHeader>
+                    <CardContent className={'grid grid-cols-2 gap-5'}>
+                        {deals.best_seller && deals.best_seller.slice(0, 4).map((item, index) => (
+                            <Link href={`/product/${item._id}`} key={index} className='flex flex-col items-center justify-center relative'>
+                                <div className='w-20 h-20 relative'>
+                                    <Image fill src={item.images[0]} alt={item.title} className='hover:scale-105 transition-transform object-contain' />
+                                </div>
+                                <p className='text-sm text-center- mt-2 truncate w-full'>{item.title}</p>
+                            </Link>
+                        ))}
+                    </CardContent>
+                    <CardFooter className={'text-sm text-primary'}>see more</CardFooter>
+                </Card>
+
+                <Card>
+                    <CardHeader className={'text-lg font-black'}>New Arrivals</CardHeader>
+                    <CardContent className={'grid grid-cols-2 gap-5'}>
+                        {deals.new_arrival && deals.new_arrival.slice(0, 4).map((item, index) => (
+                            <Link href={`/product/${item._id}`} key={index} className='flex flex-col items-center justify-center relative'>
+                                <div className='w-20 h-20 relative'>
+                                    <Image fill src={item.images[0]} alt={item.title} className='hover:scale-105 transition-transform object-contain' />
+                                </div>
+                                <p className='text-sm text-center- mt-2 truncate w-full'>{item.title}</p>
+                            </Link>
+                        ))}
+                    </CardContent>
+                    <CardFooter className={'text-sm text-primary'}>see more</CardFooter>
+                </Card>
+
+                <Card>
+                    <CardHeader className={'text-lg font-black'}>Up to 50% Off</CardHeader>
+                    <CardContent className={'grid grid-cols-2 gap-5'}>
+                        {deals.up_to_50_off && deals.up_to_50_off.slice(0, 4).map((item, index) => (
+                            <Link href={`/product/${item._id}`} key={index} className='flex flex-col items-center justify-center relative'>
+                                <div className='w-20 h-20 relative'>
+                                    <Image fill src={item.images[0]} alt={item.title} className='hover:scale-105 transition-transform object-contain' />
+                                </div>
+                                <p className='text-sm text-center- mt-2 truncate w-full'>{item.title}</p>
+                            </Link>
+                        ))}
+                    </CardContent>
+                    <CardFooter className={'text-sm text-primary'}>see more</CardFooter>
+                </Card>
+            </div>
+        </div>
+    )
+}
+
+export default DealsSection

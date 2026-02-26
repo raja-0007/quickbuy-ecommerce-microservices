@@ -38,6 +38,14 @@ const updateUser = async(req, res) => {
         res.status(err.status).json({ error: err.message });
     }
 }
+const updateAddress = async(req, res) => {
+    try{
+        const resp = await axios.put(`${process.env.USER_BASE_URL}/updateAddress/${req.userId}`, req.body);
+        res.status(resp.status).json(resp.data);
+    }catch(err){
+        res.status(err.status).json({ error: err.message });
+    }
+}
 
 const deleteUser = async(req, res) => {
     try{
@@ -49,5 +57,5 @@ const deleteUser = async(req, res) => {
 }
 
 module.exports = {
-    getAllUsers, getProfile, createUser, updateUser, deleteUser
+    getAllUsers, getProfile, createUser, updateUser, deleteUser, updateAddress
 };

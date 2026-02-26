@@ -39,6 +39,15 @@ const updateUser = async (req, res) =>{
     }
     
 }
+const updateAddress = async (req, res) =>{
+    try{
+        const user = await services.updateAddress(req.params.id, req.body)
+        res.status(200).json(user)
+    }catch(err){
+        res.status(500).json({error: err.message})
+    }
+    
+}
 
 const deleteUser = async (req, res) =>{
     try{
@@ -51,6 +60,6 @@ const deleteUser = async (req, res) =>{
 
 
 const controllers = {
-    getAllUsers, createUser, updateUser, deleteUser, getProfile
+    getAllUsers, createUser, updateUser, deleteUser, getProfile, updateAddress
 }
 module.exports = controllers;

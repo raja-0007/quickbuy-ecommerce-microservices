@@ -1,5 +1,21 @@
 const mongoose = require('mongoose');
 
+const addressSchema = new mongoose.Schema(
+  {
+    id: String,
+    street: String,
+    city: String,
+    state: String,
+    zip: String,
+    country: String,
+    phone: String,
+    isDefault: Boolean
+  },
+  { _id: false }
+);
+
+
+
 const userSchema = new mongoose.Schema(
   {
     // 🔗 LINK TO AUTH SERVICE
@@ -17,17 +33,10 @@ const userSchema = new mongoose.Schema(
     lastName: String,
     email: { type: String, required: true },
 
-    addresses: [
-      {
-        street: String,
-        city: String,
-        state: String,
-        zip: String,
-        country: String,
-        phone: String,
-        isDefault: Boolean,
-      },
-    ],
+    addresses: {
+      type: [addressSchema],
+      default: []
+    },
 
     // 🧾 METADATA
     meta: {
@@ -42,6 +51,8 @@ const userSchema = new mongoose.Schema(
     },
   }
 );
+
+
 
 const userModel = mongoose.model('users', userSchema);
 const models = { userModel }
