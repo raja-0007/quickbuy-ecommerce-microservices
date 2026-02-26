@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useMemo, useEffect } from 'react'
+import React, { Suspense, useState, useMemo, useEffect } from 'react'
 import { Star, Heart, Filter, ChevronDown, Grid, Sliders, Check, CircleCheckBig } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent } from '@/components/ui/card'
@@ -41,7 +41,7 @@ const PRODUCTS = [
     },
 ]
 
-const SearchResults = () => {
+const SearchResultsContent = () => {
     const [sortBy, setSortBy] = useState('relevance')
     const [priceRange, setPriceRange] = useState([0, 1000000])
     const [showFilters, setShowFilters] = useState(false)
@@ -384,4 +384,10 @@ const SearchResults = () => {
     )
 }
 
-export default SearchResults
+export default function SearchResults() {
+    return (
+        <Suspense fallback={null}>
+            <SearchResultsContent />
+        </Suspense>
+    )
+}

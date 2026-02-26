@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { Suspense, useEffect, useState } from 'react'
 import { Tabs, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { useSession } from 'next-auth/react'
 import { axiosHandle } from '@/lib/api'
@@ -43,7 +43,7 @@ const MOCK_PAYMENT_METHODS = [
   },
 ]
 
-export default function ProfilePage() {
+function ProfilePageContent() {
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [profile, setProfile] = useState(null)
@@ -398,5 +398,13 @@ export default function ProfilePage() {
         </Tabs>
       </div>
     </div>
+  )
+}
+
+export default function ProfilePage() {
+  return (
+    <Suspense fallback={null}>
+      <ProfilePageContent />
+    </Suspense>
   )
 }
