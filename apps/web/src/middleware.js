@@ -3,21 +3,21 @@ import { NextResponse } from "next/server"
 import { hasPagePermission } from "./lib/roleCheck"
 
 const publicRoutes = ['/', '/dashboard']
-const privateRoutes = ['/profile', '/cart', '/wishlist', '/orders' , '/testPage']
-const restrictedRoutes = ['/testPage']
+const privateRoutes = ['/profile', '/cart', '/wishlist', '/orders' , '/testPage', '/seller', '/admin']
+const restrictedRoutes = ['/testPage', '/seller', '/admin']
 
 export const middleware = async(req) => {
     const { pathname } = req.nextUrl
     console.log('pathname', pathname)
     const token = await getToken({req})
     // console.log('token in middleware', token)
-    if(privateRoutes.includes(pathname)){
+    if(privateRoutes.some(route =>pathname.startsWith(route))){
         if(!token){    
             const loginUrl = new URL('/login', req.url)
             loginUrl.searchParams.set('callbackUrl', pathname)
             return NextResponse.redirect(loginUrl)
        
-        }else if(restrictedRoutes.includes(pathname)){
+        }else if(restrictedRoutes.some(route => pathname.startsWith(route))){
             const permission = await hasPagePermission(pathname, token)
             if(!permission){
                 return NextResponse.redirect(new URL('/dashboard', req.url))

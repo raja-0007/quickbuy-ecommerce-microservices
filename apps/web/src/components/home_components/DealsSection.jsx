@@ -12,7 +12,7 @@ const DealsSection = ({deals}) => {
         setMounted(true)
     }, [])
 
-    console.log('Deals in LandingPage:', deals);
+    // console.log('Deals in LandingPage:', deals);
     if (!mounted) return null
     return (
         <div className='relative w-full'>
