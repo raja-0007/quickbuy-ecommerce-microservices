@@ -37,7 +37,9 @@ axiosHandle.interceptors.response.use(
             // Handle unauthorized access, e.g., redirect to login
             console.log('Unauthorized! Redirecting to login...');
             // router.push('/login');
-            window.location.href = '/login';
+            if (typeof window !== 'undefined') {
+                window.location.href = '/login';
+            }
         }
         return Promise.reject(error);
     }

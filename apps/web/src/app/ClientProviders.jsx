@@ -1,5 +1,6 @@
 "use client";
 
+import { Suspense } from "react";
 import { SessionProvider } from "next-auth/react";
 import { ThemeProvider } from "@/components/theme-provider";
 import Navbar from "@/components/home_components/Navbar";
@@ -22,7 +23,9 @@ export default function ClientProviders({ children }) {
       >
         <SessionProvider>
           <SearchProvider>
-            <Navbar />
+            <Suspense fallback={null}>
+              <Navbar />
+            </Suspense>
             {children}
           </SearchProvider>
         </SessionProvider>
