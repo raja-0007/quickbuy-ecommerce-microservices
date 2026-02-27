@@ -1,5 +1,5 @@
 import axios from 'axios';
-import { getSession } from 'next-auth/react';
+import { getSession, signOut } from 'next-auth/react';
 // import { useRouter } from 'next/navigation';
 // const router = useRouter()
 const url = process.env.NEXT_PUBLIC_API_URL;
@@ -31,12 +31,13 @@ axiosHandle.interceptors.response.use(
         // console.log('Response:', response);
         return response;
     },
-    (error)=>{
+    async(error)=>{
         console.log('Response error:', error.response);
         if(error.response && error.response.status === 401){
             // Handle unauthorized access, e.g., redirect to login
             console.log('Unauthorized! Redirecting to login...');
             // router.push('/login');
+            await signOut();
             if (typeof window !== 'undefined') {
                 window.location.href = '/login';
             }
