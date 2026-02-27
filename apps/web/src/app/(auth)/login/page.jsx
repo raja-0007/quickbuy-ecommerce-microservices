@@ -10,8 +10,9 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Eye, EyeOff, ShoppingBag } from 'lucide-react'
-import { signIn } from "next-auth/react"
+import { getSession, signIn, useSession } from "next-auth/react"
 import { useSearchParams } from "next/navigation"
+import customToast from "@/lib/CustomToast"
 
 function LoginPageContent() {
   const [showPassword, setShowPassword] = useState(false)
@@ -19,32 +20,40 @@ function LoginPageContent() {
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const searchParams = useSearchParams()
-  console.log("Search params:", searchParams.toString());
-  console.log("Callback URL:", searchParams.get('callbackUrl'));
+  // const { data: session, status } = useSession()
 
   const handleLogin = async (e) => {
     e.preventDefault()
-    const callbackUrl = searchParams.get('callbackUrl') || '/dashboard'
+    const callbackUrl = searchParams.get('callbackUrl')
     setIsLoading(true)
     if (email === '' || password === '') {
       setIsLoading(false)
       alert('Please fill all fields')
       return
     }
-    
-      const res = await signIn('credentials', {
-        email,
-        password,
-        redirect: false
-      })
-      // console.log("Sign in response:", res)
-      if(res.ok){
+
+    const res = await signIn('credentials', {
+      email,
+      password,
+      redirect: false
+    })
+    const session = await getSession()
+    if (res.ok) {
+      if (callbackUrl) {
         window.location.href = callbackUrl
-      }else{
-        setIsLoading(false)
-      alert(res.error)
+      } else if(session?.user?.role == 'seller') {
+        window.location.href = '/seller/dashboard'
+      } else if(session?.user?.role == 'admin'){
+        window.location.href = '/admin'
+      } else {
+        window.location.href = '/'
       }
-   
+    } else {
+      setIsLoading(false)
+      // alert(res.error)
+      customToast({message:res.error, type:"error"})
+    }
+
 
     // setTimeout(() => setIsLoading(false), 1000)
   }

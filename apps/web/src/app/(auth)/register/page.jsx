@@ -8,6 +8,9 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Eye, EyeOff, ShoppingBag, Check } from 'lucide-react'
+import { axiosHandle } from '@/lib/api'
+import customToast from '@/lib/CustomToast'
+import { useRouter } from 'next/navigation'
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -19,6 +22,7 @@ export default function RegisterPage() {
   const [confirmPassword, setConfirmPassword] = useState('')
   const [agreeToTerms, setAgreeToTerms] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
+  const router = useRouter()
 
   const passwordStrength = {
     hasUppercase: /[A-Z]/.test(password),
@@ -38,7 +42,21 @@ export default function RegisterPage() {
     }
     setIsLoading(true)
     // TODO: Implement actual authentication
-    setTimeout(() => setIsLoading(false), 1000)
+    try{
+      const res = await axiosHandle.post(`/auth/register`,{
+        name: `${firstName} ${lastName}`,
+        email,
+        password
+      })
+      console.log('res', res)
+      router.push('/login')
+      customToast({message:"Registration Successful! please Login.", type:"success"})
+    }catch(err){
+      console.log('err', err)
+      customToast({message:err.response.data.message, type:"error"})
+      setIsLoading(false)
+    }
+    // setTimeout(() => setIsLoading(false), 1000)
   }
 
   return (

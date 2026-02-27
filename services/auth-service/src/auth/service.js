@@ -12,19 +12,28 @@ const register = async (userData) => {
         throw new Error('User already exists');
         return
     }
-    const hashedPassword = await bycrypt.hash(userData.password, 10);
-    const newUser = new user.userModel({
-        name: userData.name,
-        email: userData.email,
-        password: hashedPassword,
-        role: userData.role || 'customer'
-    })
-    await newUser.save()
-    return newUser;
+    try {
+        const hashedPassword = await bycrypt.hash(userData.password, 10);
+        const newUser = new user.userModel({
+            name: userData.name,
+            email: userData.email,
+            password: hashedPassword,
+            role: userData.role || 'user'
+        })
 
-}  
+        const res = await newUser.save()
+        return res
+    } catch (err) {
+        console.log(err.message)
+        throw new Error(err.message);
 
-const login = async (userData) =>{
+    }
+
+
+
+}
+
+const login = async (userData) => {
     console.log('Inside login service', userData);
     const existingUser = await user.userModel.findOne({ email: userData.email });
     if (!existingUser) {
@@ -38,8 +47,8 @@ const login = async (userData) =>{
         return
     }
     console.log('Password is valid');
-    const token = jwt.sign({id:existingUser._id, role:existingUser.role}, process.env.JWT_SECRET, {expiresIn: '1h'});
-    const refreshToken = jwt.sign({id:existingUser._id, role:existingUser.role}, process.env.JWT_REFRESH_SECRET, {expiresIn: '7d'});
+    const token = jwt.sign({ id: existingUser._id, role: existingUser.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const refreshToken = jwt.sign({ id: existingUser._id, role: existingUser.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
     return { id: existingUser._id, accessToken: token, refreshToken: refreshToken, role: existingUser.role, name: existingUser.name, email: existingUser.email };
 }
 

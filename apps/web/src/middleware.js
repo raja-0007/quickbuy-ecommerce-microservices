@@ -31,6 +31,12 @@ export const middleware = async(req) => {
             return NextResponse.next()
         }
     }
+    else if(token && pathname.startsWith('/login') || token && pathname.startsWith('/register')){
+        return NextResponse.redirect(new URL('/', req.url))
+    }
+    else{
+        return NextResponse.next()
+    }
 }
 
 export const config = {
