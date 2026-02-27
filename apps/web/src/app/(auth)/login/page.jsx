@@ -10,8 +10,8 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Checkbox } from '@/components/ui/checkbox'
 import { Eye, EyeOff, ShoppingBag } from 'lucide-react'
-import { getSession, signIn, useSession } from "next-auth/react"
-import { useSearchParams } from "next/navigation"
+import { getSession, signIn } from "next-auth/react"
+import { useRouter, useSearchParams } from "next/navigation"
 import customToast from "@/lib/CustomToast"
 
 function LoginPageContent() {
@@ -20,7 +20,7 @@ function LoginPageContent() {
   const [password, setPassword] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const searchParams = useSearchParams()
-  // const { data: session, status } = useSession()
+  const router = useRouter()
 
   const handleLogin = async (e) => {
     e.preventDefault()
@@ -40,13 +40,17 @@ function LoginPageContent() {
     const session = await getSession()
     if (res.ok) {
       if (callbackUrl) {
-        window.location.href = callbackUrl
+        router.push(callbackUrl)
+        // window.location.href = callbackUrl
       } else if(session?.user?.role == 'seller') {
-        window.location.href = '/seller/dashboard'
+        // window.location.href = '/seller/dashboard'
+        router.push('/seller/dashboard')
       } else if(session?.user?.role == 'admin'){
-        window.location.href = '/admin'
+        // window.location.href = '/admin'
+        router.push('/admin')
       } else {
-        window.location.href = '/'
+        router.push('/')
+        // window.location.href = '/'
       }
     } else {
       setIsLoading(false)
