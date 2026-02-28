@@ -10,6 +10,7 @@ const { authThrottle, orderThrottle, productThrottle, userThrottle } = require('
 
 const app = express();
 app.use(express.json())
+app.set("trust proxy", 1);
 app.use(cors({ origin: '*' }));
 app.use(globalLimiter);
 

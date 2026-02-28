@@ -34,19 +34,19 @@ const register = async (userData) => {
 }
 
 const login = async (userData) => {
-    console.log('Inside login service', userData);
+    // console.log('Inside login service', userData);
     const existingUser = await user.userModel.findOne({ email: userData.email });
     if (!existingUser) {
         throw new Error('User does not exist');
         return
     }
-    console.log('Existing user:', existingUser);
+    // console.log('Existing user:', existingUser);
     const isPasswordValid = await bycrypt.compare(userData.password, existingUser.password)
     if (!isPasswordValid) {
         throw new Error('Invalid password');
         return
     }
-    console.log('Password is valid');
+    // console.log('Password is valid');
     const token = jwt.sign({ id: existingUser._id, role: existingUser.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     const refreshToken = jwt.sign({ id: existingUser._id, role: existingUser.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
     return { id: existingUser._id, accessToken: token, refreshToken: refreshToken, role: existingUser.role, name: existingUser.name, email: existingUser.email };

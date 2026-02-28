@@ -11,7 +11,7 @@ const register = async (req, res) => {
 
 const login = async (req, res) => {
     try{
-        console.log('Inside login service controller', req.body);
+        // console.log('Inside login service controller', req.body);
         const userDetails = await services.login(req.body);
         res.status(200).json({ status:"success", message:"Login successful", user:userDetails });
     }catch(error){

@@ -1,12 +1,18 @@
 const slowDown = require("express-slow-down");
-
+const { ipKeyGenerator } = require("express-rate-limit");
 
 const createThrottle = ({ windowMs, delayAfter, delayMs }) =>
   slowDown({
     windowMs,        // time window
     delayAfter,      // allow this many requests without delay
-    delayMs,         // add delay after threshold
-    keyGenerator: (req) => req.user?.id || req.ip,
+    delayMs: () => delayMs,
+
+    keyGenerator: (req, res) => {
+      if (req.user?.id) {
+        return `user-${req.user.id}`;
+      }
+      return ipKeyGenerator(req, res);
+    },
   });
 
   const authThrottle = createThrottle({
