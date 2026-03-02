@@ -5,6 +5,7 @@ const productServices = require('./service')
 const getHomeDeals = async(req, res) =>{
     try{
         const deals = await productServices.getHomeDeals();
+        console.log('returning deals', deals);
         res.status(200).json({ deals });
     }catch(err){
         res.status(500).json({ error: err.message });
