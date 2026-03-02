@@ -30,7 +30,7 @@ export function HeroCarousel() {
             <div className="p- h-full">
               <Card className={'h-full py-0'}>
                 <CardContent className="relative h-full items-center justify-center p-0">
-                  <Image src={img} fill className="w-full h-full object-cover" alt={`carousel_img_${index}`} />
+                  <Image src={img} fill priority className="w-full h-full object-cover" alt={`carousel_img_${index}`} />
                 </CardContent>
               </Card>
             </div>

@@ -5,6 +5,24 @@ const dotenv = require('dotenv');
 
 dotenv.config();
 
+const externalLogin = async (userData) => {
+    let authUser = await user.userModel.findOne({ email: userData.email });
+    if (!authUser) {
+        const newUser = new user.userModel({
+            name: userData.name,
+            email: userData.email,
+            password: userData.provider,
+            role: 'user'
+        })
+
+        const res = await newUser.save()
+        authUser = res
+    }
+    const token = jwt.sign({ id: authUser._id, role: authUser.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
+    const refreshToken = jwt.sign({ id: authUser._id, role: authUser.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+    return { id: authUser._id, accessToken: token, refreshToken: refreshToken, role: authUser.role, name: authUser.name, email: authUser.email };
+}
+
 const register = async (userData) => {
 
     const existingUser = await user.userModel.findOne({ email: userData.email });
@@ -60,7 +78,7 @@ const getUserById = async (userId) => {
 const services = {
     register,
     login,
-    getUserById
+    getUserById, externalLogin
 };
 
 module.exports = services;

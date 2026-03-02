@@ -25,7 +25,7 @@ const DealsSection = ({deals}) => {
                         {deals.trending && deals.trending.slice(0, 4).map((item, index) => (
                             <Link href={`/product/${item._id}`} key={index} className='flex flex-col items-center justify-center relative'>
                                 <div className='w-20 h-20 relative'>
-                                    <Image fill src={item.images[0]} alt={item.title} className=' object-contain hover:scale-105 transition-transform' />
+                                    <Image fill sizes="80px" src={item.images[0]} alt={item.title} className=' object-contain hover:scale-105 transition-transform' />
                                 </div>
                                 <p className='text-sm text-center- mt-1 truncate w-full'>{item.title}</p>
                             </Link>
@@ -40,7 +40,7 @@ const DealsSection = ({deals}) => {
                         {deals.best_seller && deals.best_seller.slice(0, 4).map((item, index) => (
                             <Link href={`/product/${item._id}`} key={index} className='flex flex-col items-center justify-center relative'>
                                 <div className='w-20 h-20 relative'>
-                                    <Image fill src={item.images[0]} alt={item.title} className='hover:scale-105 transition-transform object-contain' />
+                                    <Image fill sizes="80px" src={item.images[0]} alt={item.title} className='hover:scale-105 transition-transform object-contain' />
                                 </div>
                                 <p className='text-sm text-center- mt-2 truncate w-full'>{item.title}</p>
                             </Link>
@@ -55,7 +55,7 @@ const DealsSection = ({deals}) => {
                         {deals.new_arrival && deals.new_arrival.slice(0, 4).map((item, index) => (
                             <Link href={`/product/${item._id}`} key={index} className='flex flex-col items-center justify-center relative'>
                                 <div className='w-20 h-20 relative'>
-                                    <Image fill src={item.images[0]} alt={item.title} className='hover:scale-105 transition-transform object-contain' />
+                                    <Image fill sizes="80px" src={item.images[0]} alt={item.title} className='hover:scale-105 transition-transform object-contain' />
                                 </div>
                                 <p className='text-sm text-center- mt-2 truncate w-full'>{item.title}</p>
                             </Link>
@@ -70,7 +70,7 @@ const DealsSection = ({deals}) => {
                         {deals.up_to_50_off && deals.up_to_50_off.slice(0, 4).map((item, index) => (
                             <Link href={`/product/${item._id}`} key={index} className='flex flex-col items-center justify-center relative'>
                                 <div className='w-20 h-20 relative'>
-                                    <Image fill src={item.images[0]} alt={item.title} className='hover:scale-105 transition-transform object-contain' />
+                                    <Image fill sizes="80px" src={item.images[0]} alt={item.title} className='hover:scale-105 transition-transform object-contain' />
                                 </div>
                                 <p className='text-sm text-center- mt-2 truncate w-full'>{item.title}</p>
                             </Link>

@@ -32,7 +32,7 @@ const ExploreCategories = async () => {
                                 <Card className={'h-full py-0 border-0 bg-transparent shadow-none'}>
                                     <CardContent className="relative h-full items-center justify-center p-0">
                                         <div className='w-40 h-40 mx-auto bg-secondary relative rounded-full border'>
-                                            <Image fill src={item.image} alt={item.title} className='object-contain hover:scale-105 transition-transform' />
+                                            <Image fill sizes="160px" src={item.image} alt={item.title} className='object-contain hover:scale-105 transition-transform' />
                                         </div>
                                         <div className='w-full text-center mt-5'>
                                             <p className='text-md capitalize'>{item.title.replaceAll('-', ' ')}</p>

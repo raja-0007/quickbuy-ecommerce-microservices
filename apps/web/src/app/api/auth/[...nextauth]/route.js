@@ -1,7 +1,7 @@
 import axios from 'axios'
 import NextAuth from 'next-auth'
 import CredentialsProvider from 'next-auth/providers/credentials'
-
+import GoogleProvider from "next-auth/providers/google"
 
 const handler = NextAuth({
     providers: [
@@ -30,23 +30,56 @@ const handler = NextAuth({
                     }
                 } catch (err) {
                     // console.error('Authorize error:', err, err.response);
-                    if(err.response && err.response.status == 500){
+                    if (err.response && err.response.status == 500) {
                         throw new Error("something went wrong, please try again later");
                     }
                     // return err
                     throw new Error(err.response.data.error || 'Login failed');
                 }
             }
-        })
+        }),
+        GoogleProvider({
+            clientId: process.env.GOOGLE_CLIENT_ID,
+            clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+        }),
 
-    ], 
+    ],
     session: {
         strategy: 'jwt',
     },
-
+    pages: {
+        signIn: "/login",
+        error: "/login", // optional but recommended
+    },
     callbacks: {
-        async jwt({token, user}) {
-            if(user){
+        async jwt({ token, user, account }) {
+            if (account && account.provider !== "credentials") {
+                try {
+                    const res = await axios.post(
+                        `${process.env.NEXT_PUBLIC_API_URL}/auth/auth-login`,
+                        {
+                            email: user.email,
+                            name: user.name,
+                            provider: account.provider,
+                        }
+                    )
+
+                    const backendUser = res.data.user
+
+                    token.accessToken = backendUser.accessToken
+                    token.refreshToken = backendUser.refreshToken
+                    token.role = backendUser.role
+                    token.id = backendUser.id
+                    token.name = backendUser.name
+                    token.email = backendUser.email
+                } catch (err) {
+                    console.error("OAuth sync error:", err)
+                }
+            }
+
+            // 🔹 Credentials login
+            if (user && account?.provider === "credentials") {
+
                 token.accessToken = user.accessToken;
                 token.refreshToken = user.refreshToken;
                 token.role = user.role;
@@ -55,8 +88,8 @@ const handler = NextAuth({
                 token.email = user.email;
             }
             return token;
-        }, 
-        async session({session, token}) {
+        },
+        async session({ session, token }) {
             session.user.accessToken = token.accessToken;
             session.user.refreshToken = token.refreshToken;
             session.user.role = token.role;
@@ -68,4 +101,4 @@ const handler = NextAuth({
     }
 })
 
-export { handler as GET, handler as POST}
+export { handler as GET, handler as POST }

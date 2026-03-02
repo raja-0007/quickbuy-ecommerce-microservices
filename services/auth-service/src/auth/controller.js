@@ -19,6 +19,16 @@ const login = async (req, res) => {
         res.status(400).json({ error: error.message });
     }
 }
+const externalLogin = async (req, res) => {
+    try{
+        // console.log('Inside login service controller', req.body);
+        const userDetails = await services.externalLogin(req.body);
+        res.status(200).json({ status:"success", message:"Login successful", user:userDetails });
+    }catch(error){
+        console.error('Login error:', error);
+        res.status(400).json({ error: error.message });
+    }
+}
 
 const getMe = async (req, res) => {
     try{
@@ -34,7 +44,7 @@ const getMe = async (req, res) => {
 const controllers = {
     register,
     login,
-    getMe
+    getMe, externalLogin
 }
 
 module.exports = controllers;

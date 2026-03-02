@@ -66,7 +66,7 @@ const Navbar = () => {
     }
   }
 
-  if (pathname.includes('/login') || pathname.includes('/register')) {
+  if (pathname.includes('/login') || pathname.includes('/register') || pathname.includes('/auth-login')) {
     return null
   }
 
