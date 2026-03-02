@@ -6,7 +6,7 @@ const publicRoutes = ['/', '/dashboard']
 const privateRoutes = ['/profile', '/cart', '/wishlist', '/orders' , '/testPage', '/seller', '/admin']
 const restrictedRoutes = ['/testPage', '/seller', '/admin']
 
-export const middleware = async(req) => {
+export const proxy = async(req) => {
     const { pathname } = req.nextUrl
     console.log('pathname', pathname)
     const token = await getToken({req})

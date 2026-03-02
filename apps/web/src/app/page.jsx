@@ -14,10 +14,11 @@ export default async function Home() {
     )
 
     const dealsResponse = await res.json()
-    deals = dealsResponse.deals
+    deals = dealsResponse?.deals ?? []   
 
   } catch (err) {
     console.log('Error fetching deals:', err)
+    deals = []
   }
   return (
     <div className='bg-background text-foreground'>
