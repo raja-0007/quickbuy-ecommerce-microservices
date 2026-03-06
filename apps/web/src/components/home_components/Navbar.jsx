@@ -85,7 +85,7 @@ const Navbar = () => {
           <Link href={"/orders"} title='Orders'><ShoppingBag title="Orders" /></Link>
           <span title='Profile' className='relative group cursor-pointer'>
             <Profile session={session}/>
-            {session && <div className="absolute z-10 hidden group-hover:flex flex-col items-start justify-center bg-card border border-border p-2 rounded-md top-full right-0 mt-0 w-40 shadow-lg">
+            {session && <div className="absolute z-10 hidden group-hover:flex flex-col items-start justify-center bg-card border border-border p-2 rounded-md top-full- right-0 top-6 w-40 shadow-lg">
 
               <Link
                 href="/profile"
@@ -165,6 +165,8 @@ function SearchBar({ searchQuery, setSearchQuery, searchResults, setSearchResult
 
 function Profile({ session }) {
   if(session && session.user && session.user.name){
+    const nameParts = session.user.name.split(" ");
+    const initials = nameParts.map(part => part[0].toUpperCase()).join("");
     return (
       <Avatar className={"group"}>
       {/* <AvatarImage
@@ -172,7 +174,7 @@ function Profile({ session }) {
         alt="@shadcn"
         className="grayscale"
       /> */}
-      <AvatarFallback>{session.user.name[0].toUpperCase()}{session.user?.name[1]?.toUpperCase()}</AvatarFallback>
+      <AvatarFallback>{initials.slice(0, 2)}</AvatarFallback>
 
 
     </Avatar>

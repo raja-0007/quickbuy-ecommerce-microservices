@@ -33,7 +33,7 @@ const register = async (userData) => {
     try {
         const hashedPassword = await bycrypt.hash(userData.password, 10);
         const newUser = new user.userModel({
-            name: userData.name,
+            name: userData.email.split('@')[0],
             email: userData.email,
             password: hashedPassword,
             role: userData.role || 'user'

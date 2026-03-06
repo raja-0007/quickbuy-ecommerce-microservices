@@ -11,6 +11,7 @@ import { Eye, EyeOff, ShoppingBag, Check } from 'lucide-react'
 import { axiosHandle } from '@/lib/api'
 import customToast from '@/lib/CustomToast'
 import { useRouter } from 'next/navigation'
+import Image from 'next/image'
 
 export default function RegisterPage() {
   const [showPassword, setShowPassword] = useState(false)
@@ -60,8 +61,11 @@ export default function RegisterPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-background relative flex items-center justify-center px-4 py-12">
+      <div className="w-full h-full">
+              <Image src="/images/login_background.jpg" alt="Background" layout="fill" objectFit="cover" priority />
+            </div>
+      <div className="w-full absolute z-10 bg-none max-w-md">
         {/* Logo/Brand */}
         <div className="flex items-center justify-center mb-8">
           <div className="flex items-center gap-2">
@@ -73,15 +77,15 @@ export default function RegisterPage() {
         </div>
 
         {/* Register Card */}
-        <Card className="border-border/50 shadow-lg">
-          <CardHeader className="space-y-2">
-            <CardTitle className="text-2xl">Create account</CardTitle>
+        <Card className="border-border/50 shadow-lg bg-background/80">
+          <CardHeader className="space-y-">
+            <CardTitle className="text-2xl mb-0">Create account</CardTitle>
             <CardDescription>Join us and start shopping today</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleRegister} className="space-y-4">
               {/* Name Fields */}
-              <div className="grid grid-cols-2 gap-3">
+              {/* <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-2">
                   <Label htmlFor="firstName" className="text-foreground">
                     First name
@@ -110,7 +114,7 @@ export default function RegisterPage() {
                     className="bg-input border-border placeholder:text-muted-foreground focus-visible:ring-primary"
                   />
                 </div>
-              </div>
+              </div> */}
 
               {/* Email Field */}
               <div className="space-y-2">
@@ -155,7 +159,7 @@ export default function RegisterPage() {
                 {/* Password Strength Indicator */}
                 {password && (
                   <div className="space-y-2 mt-3">
-                    <div className="grid grid-cols-2 gap-2 text-xs">
+                    <div className="grid grid-cols-4 gap-2 text-xs">
                       <div className="flex items-center gap-1.5">
                         <Check className={`w-3.5 h-3.5 ${passwordStrength.hasUppercase ? 'text-primary' : 'text-muted-foreground'}`} />
                         <span className={passwordStrength.hasUppercase ? 'text-foreground' : 'text-muted-foreground'}>Uppercase</span>
@@ -241,7 +245,7 @@ export default function RegisterPage() {
             </div>
 
             {/* Social Sign Up Options */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols- gap-3">
               <Button variant="outline" className="border-border hover:bg-secondary bg-transparent">
                 <svg className="w-4 h-4 mr-2" viewBox="0 0 24 24">
                   <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
@@ -249,7 +253,7 @@ export default function RegisterPage() {
                   <path fill="currentColor" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
                   <path fill="currentColor" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
                 </svg>
-                Google
+                Sign up with Google
               </Button>
               {/* <Button variant="outline" className="border-border hover:bg-secondary bg-transparent">
                 <svg className="w-4 h-4 mr-2" fill="currentColor" viewBox="0 0 24 24">

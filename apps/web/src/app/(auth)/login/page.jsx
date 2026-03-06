@@ -13,6 +13,7 @@ import { Eye, EyeOff, ShoppingBag } from 'lucide-react'
 import { getSession, signIn } from "next-auth/react"
 import { useRouter, useSearchParams } from "next/navigation"
 import customToast from "@/lib/CustomToast"
+import Image from "next/image"
 
 function LoginPageContent() {
   const [showPassword, setShowPassword] = useState(false)
@@ -93,20 +94,23 @@ function LoginPageContent() {
   }
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center px-4 py-12">
-      <div className="w-full max-w-md">
+    <div className="min-h-screen bg-background flex items-center relative justify-center px-4 py-12">
+      <div className="w-full h-full">
+        <Image src="/images/login_background.jpg" alt="Background" layout="fill" objectFit="cover" priority />
+      </div>
+      <div className="w-full absolute z-10 bg-none max-w-md">
         {/* Logo/Brand */}
         <div className="flex items-center justify-center mb-8">
           <div className="flex items-center gap-2">
             <div className="bg-primary text-primary-foreground p-2 rounded-lg">
               <ShoppingBag className="w-6 h-6" />
             </div>
-            <span className="text-2xl font-bold text-foreground">QuickBuy</span>
+            <span className="text-2xl font-bold text-white">QuickBuy</span>
           </div>
         </div>
 
         {/* Login Card */}
-        <Card className="border-border/50 shadow-lg">
+        <Card className="border-border/50 shadow-lg bg-background/80">
           <CardHeader className="space-y-2">
             <CardTitle className="text-2xl">Welcome back</CardTitle>
             <CardDescription>Sign in to your account to continue shopping</CardDescription>
