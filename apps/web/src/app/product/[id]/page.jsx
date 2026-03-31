@@ -9,6 +9,8 @@ import { Star, Heart, ShoppingCart, ChevronLeft, Truck, Shield, RotateCcw, Check
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
 import { axiosHandle } from '@/lib/api'
 import Image from 'next/image'
+import { useDispatch, useSelector } from 'react-redux'
+import { addToCart } from '@/redux/slices/cartSlice'
 
 const PRODUCTS = [
   {
@@ -63,7 +65,10 @@ export default function ProductDetailPage({ params }) {
   // const [quantity, setQuantity] = useState(1)
   const [isWishlisted, setIsWishlisted] = useState(false)
   const [selectedImage, setSelectedImage] = useState(0)
+  const dispatch = useDispatch()
+  const cart = useSelector(state=> state.cart)
 
+  console.log('Cart items:', cart);
   if (!product && !loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -265,7 +270,7 @@ export default function ProductDetailPage({ params }) {
               </div> */}
 
               <div className="flex gap-3">
-                <Button disabled={product.stock === 0} className="flex-1 gap-2 bg-primary hover:bg-primary/90 disabled:opacity-50">
+                <Button disabled={product.stock === 0} onClick={()=>dispatch(addToCart(product))} className="flex-1 gap-2 bg-primary hover:bg-primary/90 disabled:opacity-50">
                   <ShoppingCart size={18} />
                   Add to Cart
                 </Button>

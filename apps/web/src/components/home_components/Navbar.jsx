@@ -13,6 +13,8 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useSearchProducts } from '@/contexts/searchProductsContext'
 import Link from 'next/link'
 import { signOut, useSession } from 'next-auth/react'
+import { useSelector } from 'react-redux'
+import { Badge } from '../ui/badge'
 
 const Navbar = () => {
   const [searchQuery, setSearchQuery] = useState("")
@@ -22,8 +24,15 @@ const Navbar = () => {
   const pathname = usePathname()
   const searchParams = useSearchParams()
   const { data: session, status } = useSession()
+  const [mounted, setMounted] = useState(false)
+  const cart = useSelector(state => state.cart)
+
+  console.log("Cart in Navbar:", cart)
+
+
 
   useEffect(() => {
+    setMounted(true)
     if (searchParams.values().length === 0) return;
     const query = searchParams.get("searchQuery") || ""
     setSearchQuery(query)
@@ -70,6 +79,9 @@ const Navbar = () => {
     return null
   }
 
+  if (!mounted) {
+    return null
+  }
   return (
     <>
       <div className='bg-background px-5 py-2 sticky top-0 z-50 w-full grid items-center border-b border-border sm:grid-cols-3'>
@@ -80,11 +92,16 @@ const Navbar = () => {
           />
         </div>
         <div className='flex col-span- justify-end gap-16 items-center'>
-          <Link href={"/cart"} title='Shopping Cart'><ShoppingCart title="Shopping Cart" /></Link>
+
+          <Link href={"/cart"} className='relative' title='Shopping Cart'>
+            <ShoppingCart title="Shopping Cart" />
+            {cart.cartData && <Badge variant="destructive" className='absolute -top-1 -right-2'>{cart.cartData.items.length}</Badge>
+            }          </Link>
+
           <Link href={"/wishlist"} title='Wishlist'><Heart title="Wishlist" /></Link>
           <Link href={"/orders"} title='Orders'><ShoppingBag title="Orders" /></Link>
           <span title='Profile' className='relative group cursor-pointer'>
-            <Profile session={session}/>
+            <Profile session={session} status={status} />
             {session && <div className="absolute z-10 hidden group-hover:flex flex-col items-start justify-center bg-card border border-border p-2 rounded-md top-full- right-0 top-6 w-40 shadow-lg">
 
               <Link
@@ -163,25 +180,33 @@ function SearchBar({ searchQuery, setSearchQuery, searchResults, setSearchResult
 }
 
 
-function Profile({ session }) {
-  if(session && session.user && session.user.name){
-    const nameParts = session.user.name.split(" ");
-    const initials = nameParts.map(part => part[0].toUpperCase()).join("");
+function Profile({ session, status }) {
+  const [isMounted, setIsMounted] = useState(false)
+
+  useEffect(() => {
+    setIsMounted(true)
+  }, [])
+
+  if (!isMounted || status === "loading") {
     return (
-      <Avatar className={"group"}>
-      {/* <AvatarImage
-        src="https://github.com/shadcn.png"
-        alt="@shadcn"
-        className="grayscale"
-      /> */}
-      <AvatarFallback>{initials.slice(0, 2)}</AvatarFallback>
-
-
-    </Avatar>
+      <Avatar className="group">
+        <AvatarFallback>?</AvatarFallback>
+      </Avatar>
     )
   }
+
+  if (session?.user?.name) {
+    const nameParts = session.user.name.split(" ");
+    const initials = nameParts.map((part) => part[0].toUpperCase()).join("");
+    return (
+      <Avatar className="group">
+        <AvatarFallback>{initials.slice(0, 2)}</AvatarFallback>
+      </Avatar>
+    )
+  }
+
   return (
-    <Link href={"/login"} className="flex w-full items-center gap-2 text-sm hover:bg-secondary p-2 rounded-md transition-colors text-foreground">
+    <Link href="/login" className="flex w-full items-center gap-2 text-sm hover:bg-secondary p-2 rounded-md transition-colors text-foreground">
       <User size={16} />
       <span>Login</span>
     </Link>

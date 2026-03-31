@@ -91,7 +91,7 @@ const SearchResultsContent = () => {
         // Filter by price
         sorted = sorted.filter((p) => {
             const finalPrice = p.price - (p.price * p.discountPercentage) / 100
-            return (finalPrice * 91.91) >= priceRange[0] && (finalPrice * 91.91) <= priceRange[1]
+            return finalPrice >= priceRange[0] && finalPrice <= priceRange[1]
         })
 
         // Filter by rating
@@ -133,7 +133,7 @@ const SearchResultsContent = () => {
     }
 
     const getDiscountedPrice = (price, discount) => {
-        return (price - (price * discount) / 100).toFixed(2)
+        return price - (price * discount) / 100
     }
 
     return (
@@ -189,17 +189,17 @@ const SearchResultsContent = () => {
 
                                     <div className='text-center flex items-center justify-center'>
 
-                                        ₹<Input className={'w-20 border border-primary focus:ring-0 p-1 h-6'} value={priceRange[0]} onChange={(e) => setPriceRange([e.target.value, priceRange[1]])} />
+                                        $<Input className={'w-20 border border-primary focus:ring-0 p-1 h-6'} value={priceRange[0]} onChange={(e) => setPriceRange([e.target.value, priceRange[1]])} />
                                         <span className='mx-3'>-</span>
-                                        ₹<Input className={'w-20 border border-primary focus:ring-0 p-1 h-6'} value={priceRange[1]} onChange={(e) => setPriceRange([priceRange[0], e.target.value])} />
+                                        $<Input className={'w-20 border border-primary focus:ring-0 p-1 h-6'} value={priceRange[1]} onChange={(e) => setPriceRange([priceRange[0], e.target.value])} />
 
                                         {/* {priceRange[0]} - ₹{priceRange[1]} */}
                                     </div>
                                     <Slider
                                         //   defaultValue={[25, 10000]}
                                         value={priceRange}
-                                        max={100000}
-                                        step={1000}
+                                        max={10000}
+                                        step={100}
                                         onValueChange={(value) => {
                                             setPriceRange(value)
                                             console.log("value", value)
@@ -349,11 +349,11 @@ const SearchResultsContent = () => {
                                                         {/* Price */}
                                                         <div className="mb-4 flex items-baseline gap-2">
                                                             <span className="text-lg font-bold text-primary">
-                                                                ₹{(discountedPrice * 91.91).toFixed(2)}
+                                                                ${(discountedPrice).toFixed(2)}
                                                             </span>
                                                             {product.discountPercentage > 0 && (
                                                                 <span className="text-xs text-muted-foreground line-through">
-                                                                    ₹{(product.price * 91.91).toFixed(2)}
+                                                                    ${(product.price).toFixed(2)}
                                                                 </span>
                                                             )}
                                                         </div>

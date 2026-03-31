@@ -3,14 +3,26 @@ import React, { useEffect, useState } from 'react'
 import { Card, CardContent, CardFooter, CardHeader } from '../ui/card'
 import Link from 'next/link'
 import Image from 'next/image'
+import { useSocket } from '@/contexts/useSocket'
 
-const DealsSection = ({deals}) => {
+const DealsSection = ({ deals }) => {
 
     const [mounted, setMounted] = useState(false)
+    const { socket } = useSocket()
 
     useEffect(() => {
         setMounted(true)
     }, [])
+
+    useEffect(() => {
+        console.log("DealsSection - Socket in useEffect:", socket)
+        if (mounted && socket && socket.connected) {
+            console.log("Emitting cart:send from DealsSection")
+            socket.emit("cart:send", {
+                message: "send cart data"
+            });
+        }
+    }, [mounted, socket])
 
     // console.log('Deals in LandingPage:', deals);
     if (!mounted) return null

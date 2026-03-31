@@ -39,11 +39,11 @@ const addToCart = async (orderData) => {
                     }
                 ],
                 priceDetails: {
-                    subTotal: itemTotal,
+                    subTotal: orderData.price - (orderData.price * (orderData.discountPercentage || 0) / 100),
                     tax: 0,
                     shipping: 0,
                     discount: 0,
-                    total: itemTotal,
+                    total: orderData.price - (orderData.price * (orderData.discountPercentage || 0) / 100),
                 },
             })
 

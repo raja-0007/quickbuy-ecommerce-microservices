@@ -2,6 +2,7 @@ const bycrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const user = require('../models/user.model');
 const dotenv = require('dotenv');
+const axios = require('axios');
 
 dotenv.config();
 
@@ -67,6 +68,8 @@ const login = async (userData) => {
     // console.log('Password is valid');
     const token = jwt.sign({ id: existingUser._id, role: existingUser.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     const refreshToken = jwt.sign({ id: existingUser._id, role: existingUser.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
+
+    await axios.post(`${process.env.ORDER_BASE_URL}/cart/getCart/${existingUser._id}`)
     return { id: existingUser._id, accessToken: token, refreshToken: refreshToken, role: existingUser.role, name: existingUser.name, email: existingUser.email };
 }
 
