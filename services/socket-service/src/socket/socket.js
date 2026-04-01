@@ -21,10 +21,20 @@ export const initSocket = (server)=>{
             next(new Error("Authentication error"))
         }
     })
-    io.on("connection", (socket) => {
+    io.on("connection", async(socket) => {
         const userId = socket.user.id
         console.log("A user connected: " + userId)
         socket.join(userId)
+
+        try{
+                const res = await fetch(`${process.env.ORDER_BASE_URL}/cart/getCart/${userId}`, {
+                    method: 'GET',                })
+                const cartData = await res.json()
+                // console.log("Fetched cart data from order service:", cartData)
+                io.to(userId).emit('cart-updated', cartData)
+            }catch(err){
+                console.log("Error fetching cart data from order service:", err)
+            }
 
         socket.on("cart:send", async(data)=>{
             console.log("Received cart:send from client for user:", data.message )
@@ -38,11 +48,12 @@ export const initSocket = (server)=>{
                 console.log("Error fetching cart data from order service:", err)
             }
             // await fetch(`${process.env.ORDER_BASE_URL}/cart/getCart/${userId}`, {
-            //     method: 'GET',
-            //     body: JSON.stringify({ message: "Cart data from client" })
-            // })
-        })
-        socket.on("disconnect", () => {
+                //     method: 'GET',
+                //     body: JSON.stringify({ message: "Cart data from client" })
+                // })
+            })
+            
+            socket.on("disconnect", () => {
             console.log("A user disconnected: " + userId)
         })
     })

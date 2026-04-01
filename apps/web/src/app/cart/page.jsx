@@ -13,6 +13,7 @@ import { toast } from 'sonner'
 import customToast from '@/lib/CustomToast'
 import Razorpay from 'razorpay'
 import { useRouter } from 'next/navigation'
+import { useSelector } from 'react-redux'
 
 const CART_ITEMS = [
   {
@@ -43,7 +44,8 @@ const CART_ITEMS = [
 
 const CartPage = () => {
   // const [cartItems, setCartItems] = useState([])
-  const [cart, setCart] = useState(null)
+  const { cartData } = useSelector(state => state.cart)
+  const [cart, setCart] = useState(cartData)
   const { data: session, status } = useSession()
   const router = useRouter()
 
@@ -63,6 +65,11 @@ const CartPage = () => {
     return { subtotal, discount, tax, total }
   }, [cart?.items])
 
+  useEffect(() => {
+    console.log("Cart data in CartPage:", cart)
+    setCart(cartData)
+  }, [cartData])
+
   const getCart = async () => {
     console.log('Fetching cart for user:', session)
     try {
@@ -76,7 +83,7 @@ const CartPage = () => {
   useEffect(() => {
     if (status !== 'loading') {
 
-      getCart()
+      // getCart()
     }
 
   }, [status])
@@ -212,10 +219,10 @@ const CartPage = () => {
       {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
-          <Link href="/search" className="flex items-center gap-2 text-primary hover:opacity-80 transition">
+          {/* <Link href="/search" className="flex items-center gap-2 text-primary hover:opacity-80 transition">
             <ChevronLeft size={20} />
             <span className="text-sm font-medium">Continue Shopping</span>
-          </Link>
+          </Link> */}
           <h1 className="text-2xl font-bold text-foreground">Shopping Cart</h1>
           <div className="w-32"></div>
         </div>
@@ -254,7 +261,7 @@ const CartPage = () => {
                         <CardContent className="p-4">
                           <div className="flex gap-4">
                             {/* Product Image */}
-                            <div className="flex-shrink-0 w-24 h-24  relative bg-muted rounded-lg overflow-hidden">
+                            <div className="shrink-0 w-24 h-24  relative bg-muted rounded-lg overflow-hidden">
                               <Image
                                 fill
                                 src={item.imageUrl || "/placeholder.svg"}

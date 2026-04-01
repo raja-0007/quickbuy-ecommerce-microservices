@@ -14,17 +14,6 @@ const DealsSection = ({ deals }) => {
         setMounted(true)
     }, [])
 
-    useEffect(() => {
-        console.log("DealsSection - Socket in useEffect:", socket)
-        if (mounted && socket && socket.connected) {
-            console.log("Emitting cart:send from DealsSection")
-            socket.emit("cart:send", {
-                message: "send cart data"
-            });
-        }
-    }, [mounted, socket])
-
-    // console.log('Deals in LandingPage:', deals);
     if (!mounted) return null
     return (
         <div className='relative w-full'>

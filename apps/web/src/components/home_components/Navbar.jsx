@@ -27,8 +27,6 @@ const Navbar = () => {
   const [mounted, setMounted] = useState(false)
   const cart = useSelector(state => state.cart)
 
-  console.log("Cart in Navbar:", cart)
-
 
 
   useEffect(() => {
