@@ -16,7 +16,7 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v3
         with:
-          node-version: 24
+          node-version: 20
 
       # Frontend
       - name: Install Frontend
@@ -24,8 +24,8 @@ jobs:
           cd apps/web
           npm install
           
-          - name: Build Frontend
-          run: |
+      - name: Build Frontend
+        run: |
           cd apps/web
           npm run build
         env:
