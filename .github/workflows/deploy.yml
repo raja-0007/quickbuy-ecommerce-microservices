@@ -1,0 +1,31 @@
+name: Deploy Backend
+
+on:
+  workflow_run:
+    workflows: ["CI Pipeline"]
+    types:
+      - completed
+
+jobs:
+  deploy:
+    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Deploy Auth Service
+        run: curl -X POST ${{ secrets.RENDER_AUTH }}
+
+      - name: Deploy Product Service
+        run: curl -X POST ${{ secrets.RENDER_PRODUCT }}
+
+      - name: Deploy Order Service
+        run: curl -X POST ${{ secrets.RENDER_ORDER }}
+
+      - name: Deploy User Service
+        run: curl -X POST ${{ secrets.RENDER_USER }}
+
+      - name: Deploy Socket Service
+        run: curl -X POST ${{ secrets.RENDER_SOCKET }}
+
+      - name: Deploy API Gateway
+        run: curl -X POST ${{ secrets.RENDER_API_GATEWAY }}

@@ -1,31 +1,41 @@
-name: Deploy Backend
+name: CI Pipeline
 
 on:
-  workflow_run:
-    workflows: ["CI Pipeline"]
-    types:
-      - completed
+  push:
+    branches: [main]
+  pull_request:
 
 jobs:
-  deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  build:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy Auth Service
-        run: curl -X POST ${{ secrets.RENDER_AUTH }}
+      - name: Checkout code
+        uses: actions/checkout@v3
 
-      - name: Deploy Product Service
-        run: curl -X POST ${{ secrets.RENDER_PRODUCT }}
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
 
-      - name: Deploy Order Service
-        run: curl -X POST ${{ secrets.RENDER_ORDER }}
+      # Frontend
+      - name: Install Frontend
+        run: |
+          cd apps/web
+          npm install
 
-      - name: Deploy User Service
-        run: curl -X POST ${{ secrets.RENDER_USER }}
+      - name: Build Frontend
+        run: |
+          cd apps/web
+          npm run build
 
-      - name: Deploy Socket Service
-        run: curl -X POST ${{ secrets.RENDER_SOCKET }}
-
-      - name: Deploy API Gateway
-        run: curl -X POST ${{ secrets.RENDER_API_GATEWAY }}
+      # Backend Services
+      - name: Build Services
+        run: |
+          for dir in services/*; do
+            echo "Processing $dir"
+            cd $dir
+            npm install
+            npm run build || echo "No build script"
+            cd ../..
+          done
