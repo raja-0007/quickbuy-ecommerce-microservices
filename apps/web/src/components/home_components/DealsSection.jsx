@@ -19,7 +19,7 @@ const DealsSection = ({ deals }) => {
         <div className='relative w-full'>
 
 
-            <div className='absolute px-5 w-full bottom-[-60px] h-[400px] bg-gradient-to-b from-transparent to-background
+            <div className='absolute px-5 w-full -bottom-15 h-100 bg-linear-to-b from-transparent to-background
         z-20 pointer-events-auto grid grid-cols-4 gap-10'>
                 <Card >
                     <CardHeader className={'text-lg font-black'}>Trending Deals</CardHeader>
