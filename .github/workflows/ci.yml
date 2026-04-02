@@ -48,4 +48,4 @@ jobs:
             echo "Checking syntax in $dir"
             find $dir -name "*.js" -exec node -c {} \;
             cd ../..
-          one
+          done
