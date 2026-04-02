@@ -41,3 +41,11 @@ jobs:
             npm run build || echo "No build script"
             cd ../..
           done
+
+      - name: Check JS Syntax
+        run: |
+          for dir in services/*; do
+            echo "Checking syntax in $dir"
+            find $dir -name "*.js" -exec node -c {} \;
+            cd ../..
+          one
