@@ -14,13 +14,14 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
       # 🔍 Detect which services changed
       - name: Detect changes
         uses: dorny/paths-filter@v3
         id: changes
         with:
-          base: ${{ github.event.workflow_run.head_branch }}
           filters: |
             auth:
               - 'services/auth-service/**'
@@ -60,3 +61,19 @@ jobs:
       - name: Deploy API Gateway
         if: steps.changes.outputs.gateway == 'true'
         run: curl -X POST ${{ secrets.RENDER_API_GATEWAY }}
+
+      - name: Debug outputs
+        run: |
+          echo "auth: $AUTH"
+          echo "product: $PRODUCT"
+          echo "order: $ORDER"
+          echo "user: $USER"
+          echo "socket: $SOCKET"
+          echo "gateway: $GATEWAY"
+        env:
+          AUTH: ${{ steps.changes.outputs.auth }}
+          PRODUCT: ${{ steps.changes.outputs.product }}
+          ORDER: ${{ steps.changes.outputs.order }}
+          USER: ${{ steps.changes.outputs.user }}
+          SOCKET: ${{ steps.changes.outputs.socket }}
+          GATEWAY: ${{ steps.changes.outputs.gateway }}
