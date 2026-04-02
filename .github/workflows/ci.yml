@@ -23,6 +23,8 @@ jobs:
         run: |
           cd apps/web
           npm install
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
 
       - name: Build Frontend
         run: |
