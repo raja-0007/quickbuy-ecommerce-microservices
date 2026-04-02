@@ -44,8 +44,10 @@ jobs:
 
       - name: Check JS Syntax
         run: |
+          set -e
           for dir in services/*; do
-            echo "Checking syntax in $dir"
-            find $dir -name "*.js" -exec node -c {} \;
-            cd ../..
+            if [ -d "$dir" ]; then
+              echo "Checking syntax in $dir"
+              find "$dir" -name "*.js" -exec node -c {} \;
+            fi
           done
