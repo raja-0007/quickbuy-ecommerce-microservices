@@ -17,7 +17,6 @@ app.use(socketRouter)
 
 
 const PORT = process.env.PORT || 4005;
-const test = ;
 server.listen(PORT, () => {
   console.log(`🚀 Realtime service running on port ${PORT}`);
 });
