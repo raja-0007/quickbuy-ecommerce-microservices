@@ -12,20 +12,50 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
+
+      # 🔍 Detect which services changed
+      - name: Detect changes
+        uses: dorny/paths-filter@v3
+        id: changes
+        with:
+          filters: |
+            auth:
+              - 'services/auth-service/**'
+            product:
+              - 'services/product-service/**'
+            order:
+              - 'services/order-service/**'
+            user:
+              - 'services/user-service/**'
+            socket:
+              - 'services/socket-service/**'
+            gateway:
+              - 'services/api-gateway/**'
+
+      # 🚀 Deploy only changed services
+
       - name: Deploy Auth Service
+        if: steps.changes.outputs.auth == 'true'
         run: curl -X POST ${{ secrets.RENDER_AUTH }}
 
       - name: Deploy Product Service
+        if: steps.changes.outputs.product == 'true'
         run: curl -X POST ${{ secrets.RENDER_PRODUCT }}
 
       - name: Deploy Order Service
+        if: steps.changes.outputs.order == 'true'
         run: curl -X POST ${{ secrets.RENDER_ORDER }}
 
       - name: Deploy User Service
+        if: steps.changes.outputs.user == 'true'
         run: curl -X POST ${{ secrets.RENDER_USER }}
 
       - name: Deploy Socket Service
+        if: steps.changes.outputs.socket == 'true'
         run: curl -X POST ${{ secrets.RENDER_SOCKET }}
 
       - name: Deploy API Gateway
+        if: steps.changes.outputs.gateway == 'true'
         run: curl -X POST ${{ secrets.RENDER_API_GATEWAY }}
