@@ -1,14 +1,11 @@
 name: Deploy Backend
 
 on:
-  workflow_run:
-    workflows: ["CI Pipeline"]
-    types:
-      - completed
+  push:
+    branches: [master]
 
 jobs:
-  deploy:
-    if: ${{ github.event.workflow_run.conclusion == 'success' }}
+  ci:
     runs-on: ubuntu-latest
 
     steps:
