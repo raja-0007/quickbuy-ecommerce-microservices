@@ -78,8 +78,6 @@ jobs:
               - 'services/socket-service/**'
             gateway:
               - 'services/api-gateway/**'
-            frontend:
-              - 'apps/web/**'
 
       # 🧪 Debug (optional)
       - name: Debug outputs
