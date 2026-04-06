@@ -130,11 +130,24 @@ const getProductById = async (productId) => {
     }
 }
 
+const addProduct = async (productData) => {
+    try {
+        const newProduct = new models.productModel({...productData, sku: 'LAP-APP-APP-0797y6', availabilityStatus:'In Stock', thumbnail: "https://cdn.dummyjson.com/product-images/laptops/apple-macbook-pro-14-inch-space-grey/thumbnail.webp"});
+        const response = await newProduct.save();
+        return response;
+    } catch (err) {
+        console.log(err);
+        throw new Error('Error adding product');
+    }
+}
+
+
 const productServices = {
     getAllProducts,
     getHomeDeals,
     getCategories,
     searchProducts,
-    getProductById
+    getProductById,
+    addProduct
 }
 module.exports = productServices;

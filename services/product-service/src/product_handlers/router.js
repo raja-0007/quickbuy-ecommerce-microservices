@@ -1,6 +1,5 @@
 const express = require('express')
 const controllers = require('./controller')
-
 const router = express.Router()
 
 router.get('/deals/home', controllers.getHomeDeals)

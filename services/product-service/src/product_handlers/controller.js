@@ -55,9 +55,13 @@ const getProductById = async(req, res) =>{
 }
 
 const addProduct = async(req, res) =>{
-    const { name, price, description } = req.body;
-    // console.log("Add product:", name, price, description);
-    res.status(201).json({ message: 'Product added successfully' });
+    try{
+            const response = await productServices.addProduct(req.body);
+            res.status(201).json({ message: 'Product added successfully', product: response });
+    }catch(err){
+        res.status(500).json({ error: err.message });
+    }
+     
 }
 
 const updateProduct = async(req, res) =>{
@@ -81,6 +85,7 @@ module.exports = {
     getProductById,
     getHomeDeals, 
     getCategories,
-    searchProducts
+    searchProducts,
+    addProduct
 
 }

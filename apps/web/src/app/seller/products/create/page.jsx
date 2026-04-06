@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/com
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ChevronLeft } from 'lucide-react'
+import { axiosHandle } from '@/lib/api'
 
 export default function CreateProductPage() {
   const router = useRouter()
@@ -18,13 +19,19 @@ export default function CreateProductPage() {
     price: '',
     stock: '',
     description: '',
-    image: '',
     weight: '',
     dimensions: '',
     warranty: '',
   })
 
+  const [images, setImages] = useState([])
+
   const [errors, setErrors] = useState({})
+
+  const handleImageChange = (e) => {
+    const files = Array.from(e.target.files)
+    setImages(files)
+  }
 
   const handleChange = (e) => {
     const { id, value } = e.target
@@ -47,20 +54,43 @@ export default function CreateProductPage() {
     if (!formData.price || parseFloat(formData.price) <= 0) newErrors.price = 'Valid price is required'
     if (!formData.stock || parseInt(formData.stock) < 0) newErrors.stock = 'Valid stock quantity is required'
     if (!formData.description.trim()) newErrors.description = 'Description is required'
-    if (!formData.image.trim()) newErrors.image = 'Image URL is required'
-    
+    if (images.length === 0) newErrors.images = 'At least one image is required'
     setErrors(newErrors)
     return Object.keys(newErrors).length === 0
   }
 
-  const handleSubmit = (e) => {
-    e.preventDefault()
-    if (validateForm()) {
-      // Here you would typically send the data to the backend
-      console.log('[v0] Creating product:', formData)
-      router.push('/seller/products')
-    }
+  const handleSubmit = async (e) => {
+  e.preventDefault()
+
+  if (!validateForm()) return
+
+  const data = new FormData()
+
+  // append text fields
+  Object.keys(formData).forEach((key) => {
+    data.append(key, formData[key])
+  })
+
+  // append multiple images
+  images.forEach((file) => {
+    data.append("images", file) // 👈 must match backend
+  })
+
+  try {
+    const res = await axiosHandle.post("/products/add-product", data, {
+      headers: {
+        "Content-Type": "multipart/form-data",
+      },
+    })
+
+    
+    console.log("Created:", res.data)
+
+    // router.push("/seller/products")
+  } catch (err) {
+    console.error(err)
   }
+}
 
   return (
     <div className="min-h-screen bg-background">
@@ -221,28 +251,34 @@ export default function CreateProductPage() {
 
               {/* Image URL */}
               <div>
-                <Label htmlFor="image" className="text-foreground">
-                  Product Image URL *
-                </Label>
+                <Label className="text-foreground">Product Images *</Label>
+
                 <Input
-                  id="image"
-                  placeholder="https://example.com/product.jpg"
-                  value={formData.image}
-                  onChange={handleChange}
+                  type="file"
+                  multiple
+                  accept="image/*"
+                  onChange={handleImageChange}
                   className="mt-2 border-border bg-background text-foreground"
                 />
-                {errors.image && <p className="mt-1 text-xs text-destructive">{errors.image}</p>}
-                {formData.image && (
+
+                {errors.images && (
+                  <p className="mt-1 text-xs text-destructive">{errors.images}</p>
+                )}
+
+                {/* Preview */}
+                {images.length > 0 && (
                   <div className="mt-3">
                     <p className="text-sm text-muted-foreground mb-2">Image Preview:</p>
-                    <img
-                      src={formData.image}
-                      alt="Preview"
-                      className="h-32 w-32 rounded object-cover border border-border"
-                      onError={(e) => {
-                        e.target.src = '/placeholder.svg'
-                      }}
-                    />
+                    <div className="flex gap-3 flex-wrap">
+                      {images.map((file, index) => (
+                        <img
+                          key={index}
+                          src={URL.createObjectURL(file)}
+                          alt="preview"
+                          className="h-24 w-24 rounded object-cover border border-border"
+                        />
+                      ))}
+                    </div>
                   </div>
                 )}
               </div>
