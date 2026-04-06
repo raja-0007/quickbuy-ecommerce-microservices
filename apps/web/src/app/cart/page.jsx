@@ -214,6 +214,7 @@ const CartPage = () => {
     }
   }
 
+  console.log('deploy test')
 
   return (
     <div className="min-h-screen bg-background">
