@@ -30,12 +30,22 @@ jobs:
         env:
           NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
 
+      - name: Build Services
+        run: |
+          for dir in services/*; do
+            echo "Processing $dir"
+            cd $dir
+            npm install
+            npm run build || echo "No build script"
+            cd ../..
+          done
       # Backend validation
       - name: Check JS Syntax
         run: |
+          set -e
           for dir in services/*; do
             if [ -d "$dir" ]; then
-              echo "Checking $dir"
+              echo "Checking syntax in $dir"
               find "$dir" -name "*.js" -exec node -c {} \;
             fi
           done
