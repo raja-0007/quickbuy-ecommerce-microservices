@@ -223,7 +223,7 @@ const CartPage = () => {
             <ChevronLeft size={20} />
             <span className="text-sm font-medium">Continue Shopping</span>
           </Link> */}
-          <h1 className="text-2xl font-bold text-foreground">Shopping Cart</h1>
+          <h1 className="text-2xl font-bold text-foreground ">Shopping Cart</h1>
           <div className="w-32"></div>
         </div>
       </header>
