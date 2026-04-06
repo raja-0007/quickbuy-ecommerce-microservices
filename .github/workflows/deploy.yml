@@ -78,8 +78,6 @@ jobs:
               - 'services/socket-service/**'
             gateway:
               - 'services/api-gateway/**'
-            frontend:
-              - 'apps/web/**'
 
       # 🧪 Debug (optional)
       - name: Debug outputs
@@ -125,7 +123,4 @@ jobs:
         if: steps.changes.outputs.gateway == 'true'
         run: curl -X POST ${{ secrets.RENDER_API_GATEWAY }}
 
-      # 🚀 Frontend deploy
-      - name: Deploy Frontend
-        if: steps.changes.outputs.frontend == 'true'
-        run: curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK }}
+      
