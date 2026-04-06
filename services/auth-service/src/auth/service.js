@@ -59,8 +59,9 @@ const login = async (userData) => {
         throw new Error('User does not exist');
         return
     }
-    // console.log('Existing user:', existingUser);
-    const isPasswordValid = await bycrypt.compare(userData.password, existingUser.password)
+    console.log('Existing user:', existingUser, userData.password);
+    const isPasswordValid = await bycrypt.compare(userData.password, existingUser.password.trim())
+    console.log('Invalid password', isPasswordValid );
     if (!isPasswordValid) {
         throw new Error('Invalid password');
         return
@@ -69,7 +70,6 @@ const login = async (userData) => {
     const token = jwt.sign({ id: existingUser._id, role: existingUser.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     const refreshToken = jwt.sign({ id: existingUser._id, role: existingUser.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
 
-    await axios.post(`${process.env.ORDER_BASE_URL}/cart/getCart/${existingUser._id}`)
     return { id: existingUser._id, accessToken: token, refreshToken: refreshToken, role: existingUser.role, name: existingUser.name, email: existingUser.email };
 }
 

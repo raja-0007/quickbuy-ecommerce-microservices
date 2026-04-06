@@ -15,7 +15,6 @@ const login = async (req, res) => {
         const userDetails = await services.login(req.body);
         res.status(200).json({ status:"success", message:"Login successful", user:userDetails });
     }catch(error){
-        console.error('Login error:', error);
         res.status(400).json({ error: error.message });
     }
 }
