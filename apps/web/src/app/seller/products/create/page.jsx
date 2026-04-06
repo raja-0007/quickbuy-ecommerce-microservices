@@ -216,7 +216,7 @@ export default function CreateProductPage() {
                   rows="5"
                   className="mt-2 w-full rounded-md border border-border bg-background px-3 py-2 text-foreground placeholder-muted-foreground focus:outline-none focus:ring-2 focus:ring-primary"
                 />
-                {errors.description && <p className="mt-1 text-xs text-destructive">{errors.description}</p>}
+                {errors.description && <p className="mt-1  text-xs text-destructive">{errors.description}</p>}
               </div>
 
               {/* Image URL */}
