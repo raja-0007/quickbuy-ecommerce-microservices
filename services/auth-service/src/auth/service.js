@@ -66,7 +66,7 @@ const login = async (userData) => {
         throw new Error('Invalid password');
         return
     }
-    // console.log('Password is valid');
+    // console.log('Password is validd');
     const token = jwt.sign({ id: existingUser._id, role: existingUser.role }, process.env.JWT_SECRET, { expiresIn: '1h' });
     const refreshToken = jwt.sign({ id: existingUser._id, role: existingUser.role }, process.env.JWT_REFRESH_SECRET, { expiresIn: '7d' });
 
