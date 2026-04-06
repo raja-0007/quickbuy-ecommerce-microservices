@@ -17,19 +17,6 @@ jobs:
         with:
           node-version: 20
 
-      # Frontend
-      - name: Install Frontend
-        run: |
-          cd apps/web
-          npm install
-
-      - name: Build Frontend
-        run: |
-          cd apps/web
-          npm run build
-        env:
-          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
-
       - name: Build Services
         run: |
           for dir in services/*; do
