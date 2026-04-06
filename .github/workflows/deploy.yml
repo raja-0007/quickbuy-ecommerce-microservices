@@ -1,4 +1,4 @@
-name: Deploy Backend
+name: CI + Deploy
 
 on:
   push:
@@ -11,10 +11,46 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v3
+
+      - name: Setup Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20
+
+      # Frontend
+      - name: Install Frontend
+        run: |
+          cd apps/web
+          npm install
+
+      - name: Build Frontend
+        run: |
+          cd apps/web
+          npm run build
+        env:
+          NEXT_PUBLIC_API_URL: ${{ secrets.NEXT_PUBLIC_API_URL }}
+
+      # Backend validation
+      - name: Check JS Syntax
+        run: |
+          for dir in services/*; do
+            if [ -d "$dir" ]; then
+              echo "Checking $dir"
+              find "$dir" -name "*.js" -exec node -c {} \;
+            fi
+          done
+
+  deploy:
+    needs: ci
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v3
         with:
           fetch-depth: 0
 
-      # 🔍 Detect which services changed
+      # 🔍 Detect changes
       - name: Detect changes
         uses: dorny/paths-filter@v3
         id: changes
@@ -32,9 +68,29 @@ jobs:
               - 'services/socket-service/**'
             gateway:
               - 'services/api-gateway/**'
+            frontend:
+              - 'apps/web/**'
 
-      # 🚀 Deploy only changed services
+      # 🧪 Debug (optional)
+      - name: Debug outputs
+        run: |
+          echo "auth: $AUTH"
+          echo "product: $PRODUCT"
+          echo "order: $ORDER"
+          echo "user: $USER"
+          echo "socket: $SOCKET"
+          echo "gateway: $GATEWAY"
+          echo "frontend: $FRONTEND"
+        env:
+          AUTH: ${{ steps.changes.outputs.auth }}
+          PRODUCT: ${{ steps.changes.outputs.product }}
+          ORDER: ${{ steps.changes.outputs.order }}
+          USER: ${{ steps.changes.outputs.user }}
+          SOCKET: ${{ steps.changes.outputs.socket }}
+          GATEWAY: ${{ steps.changes.outputs.gateway }}
+          FRONTEND: ${{ steps.changes.outputs.frontend }}
 
+      # 🚀 Backend deploys
       - name: Deploy Auth Service
         if: steps.changes.outputs.auth == 'true'
         run: curl -X POST ${{ secrets.RENDER_AUTH }}
@@ -59,18 +115,7 @@ jobs:
         if: steps.changes.outputs.gateway == 'true'
         run: curl -X POST ${{ secrets.RENDER_API_GATEWAY }}
 
-      - name: Debug outputs
-        run: |
-          echo "auth: $AUTH"
-          echo "product: $PRODUCT"
-          echo "order: $ORDER"
-          echo "user: $USER"
-          echo "socket: $SOCKET"
-          echo "gateway: $GATEWAY"
-        env:
-          AUTH: ${{ steps.changes.outputs.auth }}
-          PRODUCT: ${{ steps.changes.outputs.product }}
-          ORDER: ${{ steps.changes.outputs.order }}
-          USER: ${{ steps.changes.outputs.user }}
-          SOCKET: ${{ steps.changes.outputs.socket }}
-          GATEWAY: ${{ steps.changes.outputs.gateway }}
+      # # 🚀 Frontend deploy
+      # - name: Deploy Frontend
+      #   if: steps.changes.outputs.frontend == 'true'
+      #   run: curl -X POST ${{ secrets.VERCEL_DEPLOY_HOOK }}
