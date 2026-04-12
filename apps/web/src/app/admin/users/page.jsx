@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
-import { Search, Shield, Ban, Trash2, Crown } from 'lucide-react'
+import React, { useState, useMemo, useEffect } from 'react'
+import { Search, Ban, Trash2, Crown, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -14,28 +14,39 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table'
-
-const MOCK_USERS = [
-  { id: 'U001', name: 'Alice Johnson', email: 'alice@example.com', role: 'user', status: 'active', joinDate: '2026-01-15' },
-  { id: 'U002', name: 'Bob Smith', email: 'bob@example.com', role: 'seller', status: 'active', joinDate: '2026-01-20' },
-  { id: 'U003', name: 'Carol Davis', email: 'carol@example.com', role: 'user', status: 'suspended', joinDate: '2025-12-10' },
-  { id: 'U004', name: 'David Lee', email: 'david@example.com', role: 'user', status: 'active', joinDate: '2026-02-01' },
-  { id: 'U005', name: 'Eve Wilson', email: 'eve@example.com', role: 'seller', status: 'active', joinDate: '2026-01-28' },
-  { id: 'U006', name: 'Frank Miller', email: 'frank@example.com', role: 'user', status: 'active', joinDate: '2026-02-05' },
-  { id: 'U007', name: 'Grace Lee', email: 'grace@example.com', role: 'user', status: 'suspended', joinDate: '2025-11-15' },
-  { id: 'U008', name: 'Henry Brown', email: 'henry@example.com', role: 'seller', status: 'active', joinDate: '2026-02-10' },
-]
+import { axiosHandle } from '@/lib/api'
 
 export default function AdminUsersPage() {
-  const [users, setUsers] = useState(MOCK_USERS)
+  const [users, setUsers] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [roleFilter, setRoleFilter] = useState('all')
 
+  useEffect(() => {
+    fetchUsers()
+  }, [])
+
+  const fetchUsers = async () => {
+    try {
+      setLoading(true)
+      const res = await axiosHandle.get('/auth/getAllUsers')
+      const data = Array.isArray(res.data) ? res.data : res.data.users || []
+      setUsers(data)
+    } catch (err) {
+      setError('Failed to load users')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
+      const name = user.name || ''
+      const email = user.email || ''
       const matchesSearch =
-        user.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        user.email.toLowerCase().includes(searchQuery.toLowerCase())
+        name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        email.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesRole = roleFilter === 'all' || user.role === roleFilter
       return matchesSearch && matchesRole
     })
@@ -51,39 +62,73 @@ export default function AdminUsersPage() {
   }
 
   const getStatusColor = (status) => {
-    return status === 'active'
+    return status === 'active' || !status
       ? 'bg-green-100 text-green-800'
       : 'bg-red-100 text-red-800'
   }
 
-  const handlePromoteToSeller = (userId) => {
-    setUsers(users.map((u) => (u.id === userId ? { ...u, role: 'seller' } : u)))
+  const handlePromoteToSeller = async (userId) => {
+    try {
+      await axiosHandle.put(`/users/updateRole/${userId}`, { role: 'seller' })
+      setUsers(users.map((u) => (u._id === userId ? { ...u, role: 'seller' } : u)))
+    } catch {
+      alert('Failed to update role')
+    }
   }
 
-  const handleDemoteToUser = (userId) => {
-    setUsers(users.map((u) => (u.id === userId ? { ...u, role: 'user' } : u)))
+  const handleDemoteToUser = async (userId) => {
+    try {
+      await axiosHandle.put(`/users/updateRole/${userId}`, { role: 'user' })
+      setUsers(users.map((u) => (u._id === userId ? { ...u, role: 'user' } : u)))
+    } catch {
+      alert('Failed to update role')
+    }
   }
 
-  const handleSuspendUser = (userId) => {
-    setUsers(users.map((u) =>
-      u.id === userId ? { ...u, status: u.status === 'active' ? 'suspended' : 'active' } : u
-    ))
+  const handleSuspendUser = async (userId, currentStatus) => {
+    const newStatus = currentStatus === 'active' ? 'suspended' : 'active'
+    try {
+      await axiosHandle.put(`/users/updateStatus/${userId}`, { status: newStatus })
+      setUsers(users.map((u) => (u._id === userId ? { ...u, status: newStatus } : u)))
+    } catch {
+      alert('Failed to update status')
+    }
   }
 
-  const handleDeleteUser = (userId) => {
-    setUsers(users.filter((u) => u.id !== userId))
+  const handleDeleteUser = async (userId) => {
+    if (!confirm('Delete this user?')) return
+    try {
+      await axiosHandle.delete(`/users/deleteUser/${userId}`)
+      setUsers(users.filter((u) => u._id !== userId))
+    } catch {
+      alert('Failed to delete user')
+    }
+  }
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-red-500">{error}</p>
+      </div>
+    )
   }
 
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="mx-auto max-w-7xl">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">User Management</h1>
           <p className="text-muted-foreground mt-2">Manage all platform users, roles, and statuses</p>
         </div>
 
-        {/* Stats */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-4 mb-8">
           <Card className="border-border bg-card">
             <CardContent className="p-6">
@@ -94,15 +139,15 @@ export default function AdminUsersPage() {
           <Card className="border-border bg-card">
             <CardContent className="p-6">
               <p className="text-sm text-muted-foreground">Active</p>
-              <p className="text-2xl font-bold text-foreground text-green-600">
-                {users.filter((u) => u.status === 'active').length}
+              <p className="text-2xl font-bold text-green-600">
+                {users.filter((u) => !u.status || u.status === 'active').length}
               </p>
             </CardContent>
           </Card>
           <Card className="border-border bg-card">
             <CardContent className="p-6">
               <p className="text-sm text-muted-foreground">Sellers</p>
-              <p className="text-2xl font-bold text-foreground text-blue-600">
+              <p className="text-2xl font-bold text-blue-600">
                 {users.filter((u) => u.role === 'seller').length}
               </p>
             </CardContent>
@@ -110,14 +155,13 @@ export default function AdminUsersPage() {
           <Card className="border-border bg-card">
             <CardContent className="p-6">
               <p className="text-sm text-muted-foreground">Suspended</p>
-              <p className="text-2xl font-bold text-foreground text-red-600">
+              <p className="text-2xl font-bold text-red-600">
                 {users.filter((u) => u.status === 'suspended').length}
               </p>
             </CardContent>
           </Card>
         </div>
 
-        {/* Filters & Search */}
         <Card className="border-border bg-card mb-6">
           <CardContent className="p-6">
             <div className="flex flex-col gap-4 md:flex-row md:items-center">
@@ -148,7 +192,6 @@ export default function AdminUsersPage() {
           </CardContent>
         </Card>
 
-        {/* Users Table */}
         <Card className="border-border bg-card">
           <CardHeader>
             <CardTitle className="text-foreground">All Users</CardTitle>
@@ -169,16 +212,20 @@ export default function AdminUsersPage() {
                 </TableHeader>
                 <TableBody>
                   {filteredUsers.map((user) => (
-                    <TableRow key={user.id} className="border-border">
+                    <TableRow key={user._id} className="border-border">
                       <TableCell className="font-medium text-foreground">{user.name}</TableCell>
                       <TableCell className="text-muted-foreground">{user.email}</TableCell>
                       <TableCell>
                         <Badge className={getRoleColor(user.role)}>{user.role}</Badge>
                       </TableCell>
                       <TableCell>
-                        <Badge className={getStatusColor(user.status)}>{user.status}</Badge>
+                        <Badge className={getStatusColor(user.status)}>
+                          {user.status || 'active'}
+                        </Badge>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{user.joinDate}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {user.createdAt ? new Date(user.createdAt).toLocaleDateString() : '—'}
+                      </TableCell>
                       <TableCell>
                         <div className="flex gap-2">
                           {user.role === 'user' ? (
@@ -186,7 +233,7 @@ export default function AdminUsersPage() {
                               size="sm"
                               variant="outline"
                               className="border-primary text-primary hover:bg-primary/10"
-                              onClick={() => handlePromoteToSeller(user.id)}
+                              onClick={() => handlePromoteToSeller(user._id)}
                               title="Promote to Seller"
                             >
                               <Crown className="h-4 w-4" />
@@ -196,7 +243,7 @@ export default function AdminUsersPage() {
                               size="sm"
                               variant="outline"
                               className="border-accent text-accent hover:bg-accent/10"
-                              onClick={() => handleDemoteToUser(user.id)}
+                              onClick={() => handleDemoteToUser(user._id)}
                               title="Demote to User"
                             >
                               <Crown className="h-4 w-4" />
@@ -206,7 +253,8 @@ export default function AdminUsersPage() {
                             size="sm"
                             variant="outline"
                             className="border-yellow-500 text-yellow-600 hover:bg-yellow-50"
-                            onClick={() => handleSuspendUser(user.id)}
+                            onClick={() => handleSuspendUser(user._id, user.status || 'active')}
+                            title={user.status === 'suspended' ? 'Unsuspend' : 'Suspend'}
                           >
                             <Ban className="h-4 w-4" />
                           </Button>
@@ -214,7 +262,7 @@ export default function AdminUsersPage() {
                             size="sm"
                             variant="outline"
                             className="border-red-500 text-red-600 hover:bg-red-50"
-                            onClick={() => handleDeleteUser(user.id)}
+                            onClick={() => handleDeleteUser(user._id)}
                           >
                             <Trash2 className="h-4 w-4" />
                           </Button>

@@ -1,7 +1,7 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
-import { Search, Eye, CheckCircle } from 'lucide-react'
+import React, { useState, useMemo, useEffect } from 'react'
+import { Search, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -21,31 +21,41 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select'
+import { axiosHandle } from '@/lib/api'
 
-const MOCK_ORDERS = [
-  { id: 'ORD001', customer: 'John Doe', email: 'john@example.com', amount: 2499, items: 1, status: 'completed', date: '2026-02-20' },
-  { id: 'ORD002', customer: 'Jane Smith', email: 'jane@example.com', amount: 1850, items: 2, status: 'processing', date: '2026-02-19' },
-  { id: 'ORD003', customer: 'Mike Johnson', email: 'mike@example.com', amount: 3200, items: 3, status: 'pending', date: '2026-02-18' },
-  { id: 'ORD004', customer: 'Sarah Williams', email: 'sarah@example.com', amount: 1599, items: 1, status: 'shipped', date: '2026-02-17' },
-  { id: 'ORD005', customer: 'Tom Brown', email: 'tom@example.com', amount: 2150, items: 2, status: 'completed', date: '2026-02-16' },
-  { id: 'ORD006', customer: 'Emma Davis', email: 'emma@example.com', amount: 4500, items: 5, status: 'paid', date: '2026-02-15' },
-  { id: 'ORD007', customer: 'Robert Wilson', email: 'robert@example.com', amount: 1200, items: 1, status: 'pending', date: '2026-02-14' },
-  { id: 'ORD008', customer: 'Lisa Anderson', email: 'lisa@example.com', amount: 3799, items: 3, status: 'shipped', date: '2026-02-13' },
-]
-
-const ORDER_STATUSES = ['cart', 'created', 'paid', 'processing', 'shipped', 'completed']
+const ORDER_STATUSES = ['CREATED', 'SHIPPED', 'IN_TRANSIT', 'DELIVERED', 'CANCELLED']
 
 export default function AdminOrdersPage() {
-  const [orders, setOrders] = useState(MOCK_ORDERS)
+  const [orders, setOrders] = useState([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(null)
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('all')
 
+  useEffect(() => {
+    fetchOrders()
+  }, [])
+
+  const fetchOrders = async () => {
+    try {
+      setLoading(true)
+      const res = await axiosHandle.get('/orders/getAllOrders')
+      const data = Array.isArray(res.data) ? res.data : res.data.orders || []
+      setOrders(data)
+    } catch {
+      setError('Failed to load orders')
+    } finally {
+      setLoading(false)
+    }
+  }
+
   const filteredOrders = useMemo(() => {
     return orders.filter((order) => {
+      const id = order._id || order.orderId || ''
+      const userId = order.authUserId || ''
       const matchesSearch =
-        order.id.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-        order.email.toLowerCase().includes(searchQuery.toLowerCase())
+        id.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        userId.toLowerCase().includes(searchQuery.toLowerCase())
       const matchesStatus = statusFilter === 'all' || order.status === statusFilter
       return matchesSearch && matchesStatus
     })
@@ -53,20 +63,22 @@ export default function AdminOrdersPage() {
 
   const getStatusColor = (status) => {
     const colors = {
-      pending: 'bg-yellow-100 text-yellow-800',
-      processing: 'bg-blue-100 text-blue-800',
-      shipped: 'bg-purple-100 text-purple-800',
-      completed: 'bg-green-100 text-green-800',
-      paid: 'bg-cyan-100 text-cyan-800',
-      cart: 'bg-gray-100 text-gray-800',
+      CREATED: 'bg-yellow-100 text-yellow-800',
+      SHIPPED: 'bg-purple-100 text-purple-800',
+      IN_TRANSIT: 'bg-blue-100 text-blue-800',
+      DELIVERED: 'bg-green-100 text-green-800',
+      CANCELLED: 'bg-red-100 text-red-800',
     }
     return colors[status] || 'bg-gray-100 text-gray-800'
   }
 
-  const handleUpdateStatus = (orderId, newStatus) => {
-    setOrders(orders.map((o) =>
-      o.id === orderId ? { ...o, status: newStatus } : o
-    ))
+  const handleUpdateStatus = async (orderId, newStatus) => {
+    try {
+      await axiosHandle.put(`/orders/updateOrder/${orderId}`, { status: newStatus })
+      setOrders(orders.map((o) => (o._id === orderId ? { ...o, status: newStatus } : o)))
+    } catch {
+      alert('Failed to update order status')
+    }
   }
 
   const statusStats = ORDER_STATUSES.map((status) => ({
@@ -74,19 +86,33 @@ export default function AdminOrdersPage() {
     count: orders.filter((o) => o.status === status).length,
   }))
 
-  const totalRevenue = orders.reduce((sum, o) => sum + o.amount, 0)
+  const totalRevenue = orders.reduce((sum, o) => sum + (o.priceDetails?.total || 0), 0)
+
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
+  if (error) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <p className="text-red-500">{error}</p>
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="mx-auto max-w-7xl">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-foreground">Order Management</h1>
           <p className="text-muted-foreground mt-2">Monitor and manage all platform orders</p>
         </div>
 
-        {/* Stats */}
-        <div className="grid grid-cols-1 gap-4 md:grid-cols-5 mb-8">
+        <div className="grid grid-cols-1 gap-4 md:grid-cols-4 mb-8">
           <Card className="border-border bg-card">
             <CardContent className="p-6">
               <p className="text-sm text-muted-foreground">Total Orders</p>
@@ -96,10 +122,12 @@ export default function AdminOrdersPage() {
           <Card className="border-border bg-card">
             <CardContent className="p-6">
               <p className="text-sm text-muted-foreground">Total Revenue</p>
-              <p className="text-2xl font-bold text-foreground">₹{(totalRevenue / 1000).toFixed(1)}K</p>
+              <p className="text-2xl font-bold text-foreground">
+                ${(totalRevenue / 1000).toFixed(1)}K
+              </p>
             </CardContent>
           </Card>
-          {statusStats.slice(0, 3).map((stat) => (
+          {statusStats.slice(0, 2).map((stat) => (
             <Card key={stat.status} className="border-border bg-card">
               <CardContent className="p-6">
                 <p className="text-sm text-muted-foreground capitalize">{stat.status}</p>
@@ -109,7 +137,6 @@ export default function AdminOrdersPage() {
           ))}
         </div>
 
-        {/* Status Filter Tags */}
         <Card className="border-border bg-card mb-6">
           <CardContent className="p-6">
             <div className="flex flex-wrap gap-2">
@@ -118,7 +145,7 @@ export default function AdminOrdersPage() {
                 className={statusFilter === 'all' ? 'bg-primary' : 'border-primary text-primary'}
                 onClick={() => setStatusFilter('all')}
               >
-                All Orders ({orders.length})
+                All ({orders.length})
               </Button>
               {statusStats.map((stat) => (
                 <Button
@@ -127,20 +154,19 @@ export default function AdminOrdersPage() {
                   className={statusFilter === stat.status ? 'bg-primary' : 'border-primary text-primary'}
                   onClick={() => setStatusFilter(stat.status)}
                 >
-                  {stat.status.charAt(0).toUpperCase() + stat.status.slice(1)} ({stat.count})
+                  {stat.status} ({stat.count})
                 </Button>
               ))}
             </div>
           </CardContent>
         </Card>
 
-        {/* Search */}
         <Card className="border-border bg-card mb-6">
           <CardContent className="p-6">
             <div className="relative">
               <Search className="absolute left-3 top-3 h-5 w-5 text-muted-foreground" />
               <Input
-                placeholder="Search by order ID, customer, or email..."
+                placeholder="Search by order ID or user ID..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10"
@@ -149,7 +175,6 @@ export default function AdminOrdersPage() {
           </CardContent>
         </Card>
 
-        {/* Orders Table */}
         <Card className="border-border bg-card">
           <CardHeader>
             <CardTitle className="text-foreground">All Orders</CardTitle>
@@ -161,39 +186,47 @@ export default function AdminOrdersPage() {
                 <TableHeader>
                   <TableRow>
                     <TableHead className="text-foreground">Order ID</TableHead>
-                    <TableHead className="text-foreground">Customer</TableHead>
+                    <TableHead className="text-foreground">User</TableHead>
                     <TableHead className="text-foreground">Amount</TableHead>
                     <TableHead className="text-foreground">Items</TableHead>
                     <TableHead className="text-foreground">Status</TableHead>
                     <TableHead className="text-foreground">Date</TableHead>
-                    <TableHead className="text-foreground">Action</TableHead>
+                    <TableHead className="text-foreground">Update</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {filteredOrders.map((order) => (
-                    <TableRow key={order.id} className="border-border">
-                      <TableCell className="font-medium text-foreground">{order.id}</TableCell>
-                      <TableCell>
-                        <div className="text-foreground">
-                          <p className="font-medium">{order.customer}</p>
-                          <p className="text-sm text-muted-foreground">{order.email}</p>
-                        </div>
+                    <TableRow key={order._id} className="border-border">
+                      <TableCell className="font-medium text-foreground text-xs">
+                        {order.orderId || order._id}
                       </TableCell>
-                      <TableCell className="font-semibold text-foreground">₹{order.amount}</TableCell>
-                      <TableCell className="text-foreground">{order.items} items</TableCell>
+                      <TableCell className="text-muted-foreground text-xs">
+                        {order.authUserId}
+                      </TableCell>
+                      <TableCell className="font-semibold text-foreground">
+                        ${order.priceDetails?.total || 0}
+                      </TableCell>
+                      <TableCell className="text-foreground">
+                        {order.items?.length || 0} items
+                      </TableCell>
                       <TableCell>
                         <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
                       </TableCell>
-                      <TableCell className="text-muted-foreground">{order.date}</TableCell>
+                      <TableCell className="text-muted-foreground">
+                        {order.createdAt ? new Date(order.createdAt).toLocaleDateString() : '—'}
+                      </TableCell>
                       <TableCell>
-                        <Select value={order.status} onValueChange={(newStatus) => handleUpdateStatus(order.id, newStatus)}>
-                          <SelectTrigger className="w-32">
+                        <Select
+                          value={order.status}
+                          onValueChange={(newStatus) => handleUpdateStatus(order._id, newStatus)}
+                        >
+                          <SelectTrigger className="w-36">
                             <SelectValue />
                           </SelectTrigger>
                           <SelectContent>
                             {ORDER_STATUSES.map((status) => (
                               <SelectItem key={status} value={status}>
-                                {status.charAt(0).toUpperCase() + status.slice(1)}
+                                {status}
                               </SelectItem>
                             ))}
                           </SelectContent>

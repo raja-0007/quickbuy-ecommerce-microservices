@@ -15,32 +15,6 @@ import Link from 'next/link'
 import { axiosHandle } from '@/lib/api'
 import customToast from '@/lib/CustomToast'
 
-// Sample products data
-const PRODUCTS = [
-    {
-        id: 110,
-        title: 'Selfie Lamp with iPhone',
-        price: 14.99,
-        discountPercentage: 19.4,
-        rating: 3.55,
-        stock: 58,
-        category: 'mobile-accessories',
-        thumbnail: 'https://cdn.dummyjson.com/product-images/mobile-accessories/selfie-lamp-with-iphone/thumbnail.webp',
-        availabilityStatus: 'In Stock',
-    },
-    {
-        id: 71,
-        title: 'Silver Pot With Glass Cap',
-        price: 39.99,
-        discountPercentage: 5.7,
-        rating: 3.22,
-        stock: 40,
-        category: 'kitchen-accessories',
-        thumbnail: 'https://cdn.dummyjson.com/product-images/kitchen-accessories/silver-pot-with-glass-cap/thumbnail.webp',
-        availabilityStatus: 'In Stock',
-    },
-]
-
 const SearchResultsContent = () => {
     const [sortBy, setSortBy] = useState('relevance')
     const [priceRange, setPriceRange] = useState([0, 1000000])
@@ -193,7 +167,6 @@ const SearchResultsContent = () => {
                                         <span className='mx-3'>-</span>
                                         $<Input className={'w-20 border border-primary focus:ring-0 p-1 h-6'} value={priceRange[1]} onChange={(e) => setPriceRange([priceRange[0], e.target.value])} />
 
-                                        {/* {priceRange[0]} - ₹{priceRange[1]} */}
                                     </div>
                                     <Slider
                                         //   defaultValue={[25, 10000]}

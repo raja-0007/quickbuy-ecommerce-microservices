@@ -23,9 +23,9 @@ const getCategories = async(req, res) => {
 }
 const getAllProducts = async(req, res) => {
     try{
-        const {limit, page, searchQuery} = req.query;
+        const {limit, page, searchQuery, sellerUserId} = req.query;
             const resp = await axios.get(`${process.env.PRODUCT_BASE_URL}/get-products`, {
-                params: {limit, page, searchQuery}
+                params: {limit, page, searchQuery, sellerUserId}
             });
             // console.log('get products called', resp.data);
             res.status(resp.status).json(resp.data);
@@ -69,7 +69,11 @@ const addProduct = async(req, res)=>{
             });
         }
 
-        const productData = { ...req.body, images: imageUrls };
+        const productData = {
+            ...req.body,
+            sellerUserId: req.userId,
+            images: imageUrls
+        };
 
         const resp = await axios.post(`${process.env.PRODUCT_BASE_URL}/add-product`, productData);
         res.status(resp.status).json(resp.data);

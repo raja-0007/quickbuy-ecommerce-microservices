@@ -2,16 +2,22 @@ const { response } = require('express');
 const models = require('../models/product.model')
 const categoryModels = require('../models/productCategory.model')
 
-const getAllProducts = async (limit = 10, page = 1, searchQuery = '') => {
+const getAllProducts = async (limit = 10, page = 1, searchQuery = '', sellerUserId = '') => {
     try {
         const skip = (page - 1) * limit;
-        const filter = searchQuery === '' ? {} : {
-            $or: [
+        const filter = {};
+
+        if (searchQuery !== '') {
+            filter.$or = [
                 { title: { $regex: searchQuery, $options: 'i' } },
                 { description: { $regex: searchQuery, $options: 'i' } },
                 { category: { $regex: searchQuery, $options: 'i' } },
                 { tags: { $regex: searchQuery, $options: 'i' } }
-            ]
+            ];
+        }
+
+        if (sellerUserId) {
+            filter.sellerUserId = sellerUserId;
         }
 
 
@@ -132,7 +138,16 @@ const getProductById = async (productId) => {
 
 const addProduct = async (productData) => {
     try {
-        const newProduct = new models.productModel({...productData, sku: 'LAP-APP-APP-0797y6', availabilityStatus:'In Stock', thumbnail: "https://cdn.dummyjson.com/product-images/laptops/apple-macbook-pro-14-inch-space-grey/thumbnail.webp"});
+        const sellerUserId = productData?.sellerUserId || productData?.userId || productData?.authUserId;
+        const sku = `SKU-${Date.now()}-${Math.floor(Math.random() * 10000)}`;
+
+        const newProduct = new models.productModel({
+            ...productData,
+            sellerUserId,
+            sku,
+            availabilityStatus:'In Stock',
+            thumbnail: "https://cdn.dummyjson.com/product-images/laptops/apple-macbook-pro-14-inch-space-grey/thumbnail.webp"
+        });
         const response = await newProduct.save();
         return response;
     } catch (err) {
@@ -142,12 +157,34 @@ const addProduct = async (productData) => {
 }
 
 
+const updateProduct = async (productId, updateData) => {
+    try {
+        const updated = await models.productModel.findByIdAndUpdate(productId, updateData, { new: true });
+        if (!updated) throw new Error('Product not found');
+        return updated;
+    } catch (err) {
+        throw new Error('Error updating product');
+    }
+}
+
+const deleteProduct = async (productId) => {
+    try {
+        const deleted = await models.productModel.findByIdAndDelete(productId);
+        if (!deleted) throw new Error('Product not found');
+        return deleted;
+    } catch (err) {
+        throw new Error('Error deleting product');
+    }
+}
+
 const productServices = {
     getAllProducts,
     getHomeDeals,
     getCategories,
     searchProducts,
     getProductById,
-    addProduct
+    addProduct,
+    updateProduct,
+    deleteProduct,
 }
 module.exports = productServices;

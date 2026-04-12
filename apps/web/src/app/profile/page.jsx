@@ -14,42 +14,13 @@ import ProfileAddressesTab from '@/components/profile_components/ProfileAddresse
 import ProfilePaymentsTab from '@/components/profile_components/ProfilePaymentsTab'
 import ProfileSettingsTab from '@/components/profile_components/ProfileSettingsTab'
 
-const MOCK_USER = {
-  id: '1',
-  firstName: 'Sarah',
-  lastName: 'Anderson',
-  email: 'sarah.anderson@example.com',
-  phone: '+1 (555) 123-4567',
-  avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
-  joinDate: 'January 15, 2023',
-}
-
-const MOCK_PAYMENT_METHODS = [
-  {
-    id: '1',
-    type: 'card',
-    brand: 'Visa',
-    last4: '4242',
-    expiry: '12/25',
-    isDefault: true,
-  },
-  {
-    id: '2',
-    type: 'card',
-    brand: 'Mastercard',
-    last4: '5555',
-    expiry: '08/26',
-    isDefault: false,
-  },
-]
-
 function ProfilePageContent() {
   const [isEditingProfile, setIsEditingProfile] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
   const [profile, setProfile] = useState(null)
   const [profileForm, setProfileForm] = useState(null)
   const [addresses, setAddresses] = useState([])
-  const [paymentMethods, setPaymentMethods] = useState(MOCK_PAYMENT_METHODS)
+  const [paymentMethods, setPaymentMethods] = useState([])
   const [isAddingAddress, setIsAddingAddress] = useState(false)
   const [isAddingPayment, setIsAddingPayment] = useState(false)
   const [editingAddressId, setEditingAddressId] = useState(null)

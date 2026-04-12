@@ -36,10 +36,11 @@ const orderSchema = new mongoose.Schema(
       method: String,
       amount: Number,
       currency: String,
-      status:{
+      status: {
         type: String,
-      enum: ['PENDING', 'PAID', 'FAILED'],
-      default: 'PENDING'},
+        enum: ['PENDING', 'PAID', 'FAILED'],
+        default: 'PENDING',
+      },
       createdAt: { type: Date, default: Date.now },
       updatedAt: { type: Date, default: Date.now },
       razorpay: Object

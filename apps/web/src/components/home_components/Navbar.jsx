@@ -13,7 +13,8 @@ import { usePathname, useRouter, useSearchParams } from 'next/navigation'
 import { useSearchProducts } from '@/contexts/searchProductsContext'
 import Link from 'next/link'
 import { signOut, useSession } from 'next-auth/react'
-import { useSelector } from 'react-redux'
+import { useDispatch, useSelector } from 'react-redux'
+import { setCart } from '@/redux/slices/cartSlice'
 import { Badge } from '../ui/badge'
 
 const Navbar = () => {
@@ -26,8 +27,7 @@ const Navbar = () => {
   const { data: session, status } = useSession()
   const [mounted, setMounted] = useState(false)
   const cart = useSelector(state => state.cart)
-
-
+  const dispatch = useDispatch()
 
   useEffect(() => {
     setMounted(true)
@@ -36,6 +36,15 @@ const Navbar = () => {
     setSearchQuery(query)
     debounced(query)
   }, [])
+
+  // Fetch cart on mount so badge count is accurate immediately
+  useEffect(() => {
+    if (status === 'authenticated') {
+      axiosHandle.get('/orders/cart/getCart')
+        .then(res => { if (res.data) dispatch(setCart(res.data)) })
+        .catch(() => {})
+    }
+  }, [status])
 
   const debounced = useDebouncedCallback(
     // function
@@ -80,6 +89,7 @@ const Navbar = () => {
   if (!mounted) {
     return null
   }
+
   return (
     <>
       <div className='bg-background px-5 py-2 sticky top-0 z-50 w-full grid items-center border-b border-border sm:grid-cols-3'>
@@ -93,8 +103,12 @@ const Navbar = () => {
 
           <Link href={"/cart"} className='relative' title='Shopping Cart'>
             <ShoppingCart title="Shopping Cart" />
-            {cart.cartData && <Badge variant="destructive" className='absolute -top-1 -right-2'>{cart.cartData.items.length}</Badge>
-            }          </Link>
+            {cart.cartData?.items?.length > 0 && (
+              <Badge variant="destructive" className='absolute -top-1 -right-2'>
+                {cart.cartData.items.length}
+              </Badge>
+            )}
+          </Link>
 
           <Link href={"/wishlist"} title='Wishlist'><Heart title="Wishlist" /></Link>
           <Link href={"/orders"} title='Orders'><ShoppingBag title="Orders" /></Link>
@@ -162,7 +176,10 @@ function SearchBar({ searchQuery, setSearchQuery, searchResults, setSearchResult
       {show && searchResults.length > 0 && !pathname.includes('/search-results') && (
         <div className='absolute top-full left- w-md left-1/2 -translate-x-1/2 bg-card rounded-lg mt-1 max-h-60 overflow-y-auto z-50'>
           {searchResults.map((item, index) => (
-            <div key={index} className='p-3 border-b flex items-center justify-between gap-2 border-border hover:bg-slate-100 cursor-pointer'>
+            <div key={index} onClick={() => {
+              router.push(`/product/${item._id}`)
+              // setShow(false)
+            }} className='p-3 border-b flex items-center justify-between gap-2 border-border hover:bg-slate-100 cursor-pointer'>
               <div className="flex items-center gap-2">
 
                 <Search className='text-xs size-3 text-primary' /> <p className='text-sm max-w-[350px] truncate'>{item.title}</p>

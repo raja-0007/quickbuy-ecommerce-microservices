@@ -12,55 +12,11 @@ import Image from 'next/image'
 import { useDispatch, useSelector } from 'react-redux'
 import { addToCart } from '@/redux/slices/cartSlice'
 
-const PRODUCTS = [
-  {
-    id: "696f488435b4699c2f11f515",
-    title: 'Selfie Lamp with iPhone',
-    description: 'Professional selfie lamp with adjustable brightness and color temperature. Perfect for content creators, makeup artists, and social media influencers. Features 360-degree rotation and sturdy phone holder.',
-    price: 14.99,
-    discountPercentage: 19.4,
-    rating: 3.55,
-    reviews: [],
-    stock: 58,
-    category: 'mobile-accessories',
-    thumbnail: 'https://cdn.dummyjson.com/product-images/110/thumbnail.webp',
-    images: [
-      'https://cdn.dummyjson.com/product-images/110/1.jpg',
-      'https://cdn.dummyjson.com/product-images/110/2.jpg',
-      'https://cdn.dummyjson.com/product-images/110/3.jpg',
-    ],
-    availabilityStatus: 'In Stock',
-    brand: 'LampPro',
-    sku: 'LAMP-SELF-110',
-    tags: ['lighting', 'selfie', 'photography'],
-  },
-  {
-    id: 71,
-    title: 'Silver Pot With Glass Cap',
-    description: 'Premium stainless steel pot with tempered glass lid. Heat-resistant handles and measuring marks inside. Suitable for cooking, steaming, and boiling. Easy to clean and maintain.',
-    price: 39.99,
-    discountPercentage: 5.7,
-    rating: 3.22,
-    reviews: 95,
-    stock: 40,
-    category: 'kitchen-accessories',
-    thumbnail: 'https://cdn.dummyjson.com/product-images/71/thumbnail.webp',
-    images: [
-      'https://cdn.dummyjson.com/product-images/71/1.jpg',
-      'https://cdn.dummyjson.com/product-images/71/2.jpg',
-      'https://cdn.dummyjson.com/product-images/71/3.jpg',
-    ],
-    availabilityStatus: 'In Stock',
-    brand: 'KitchenPro',
-    sku: 'POT-GLASS-71',
-    tags: ['kitchen', 'cooking', 'pot'],
-  },
-]
-
 export default function ProductDetailPage({ params }) {
   const { id } = React.use(params)
   const [product, setProduct] = useState(null)
   const [loading, setLoading] = useState(true)
+  const [relatedProducts, setRelatedProducts] = useState([])
   // const product = MOCK_PRODUCT.id === parseInt(id) ? MOCK_PRODUCT : null
   // const [quantity, setQuantity] = useState(1)
   const [isWishlisted, setIsWishlisted] = useState(false)
@@ -88,8 +44,20 @@ export default function ProductDetailPage({ params }) {
     try{
       setLoading(true);
       const res = await axiosHandle.get(`/products/getProduct/${id}`);
-      setProduct(res.data.product);
-      console.log('Product details:', res.data.product);
+      const fetchedProduct = res.data.product;
+      setProduct(fetchedProduct);
+      // fetch related products by same category, exclude current
+      if (fetchedProduct?.category) {
+        try {
+          const relRes = await axiosHandle.get('/products/get-products', {
+            params: { searchQuery: fetchedProduct.category, limit: 5 },
+          })
+          const all = relRes.data?.products || []
+          setRelatedProducts(all.filter((p) => p._id !== fetchedProduct._id).slice(0, 4))
+        } catch {
+          // fail silently — related products are non-critical
+        }
+      }
       setLoading(false);
     }catch(err){
       console.log(err);
@@ -406,16 +374,17 @@ export default function ProductDetailPage({ params }) {
         {/* Related Products Section */}
         <div className="mt-16 border-t border-border pt-12">
           <h2 className="mb-6 text-2xl font-bold text-foreground">Related Products</h2>
-          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-            {PRODUCTS.filter((p) => p.id !== product.id)
-              .slice(0, 4)
-              .map((relatedProduct) => (
-                <Link key={relatedProduct.id} href={`/product/${relatedProduct.id}`}>
+          {relatedProducts.length === 0 ? (
+            <p className="text-muted-foreground text-sm">No related products found</p>
+          ) : (
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+              {relatedProducts.map((relatedProduct) => (
+                <Link key={relatedProduct._id} href={`/product/${relatedProduct._id}`}>
                   <Card className="border-border bg-card transition-all hover:shadow-lg">
                     <CardContent className="p-0">
                       <div className="relative overflow-hidden rounded-t-lg bg-background">
                         <img
-                          src={relatedProduct.thumbnail || "/placeholder.svg"}
+                          src={relatedProduct.thumbnail || '/placeholder.svg'}
                           alt={relatedProduct.title}
                           className="h-48 w-full object-cover transition-transform hover:scale-110"
                         />
@@ -430,18 +399,17 @@ export default function ProductDetailPage({ params }) {
                           {relatedProduct.title}
                         </p>
                         <div className="mb-2 flex items-center gap-1">
-                          {Array.from({ length: Math.round(relatedProduct.rating) }).map((_, i) => (
+                          {Array.from({ length: Math.round(relatedProduct.rating || 0) }).map((_, i) => (
                             <Star key={i} size={12} className="fill-accent text-accent" />
                           ))}
                           <span className="text-xs text-muted-foreground">
-                            {relatedProduct.rating.toFixed(1)}
+                            {relatedProduct.rating?.toFixed(1) ?? '—'}
                           </span>
                         </div>
                         <p className="text-sm font-bold text-foreground">
-                          $
-                          {(
+                          ${(
                             relatedProduct.price -
-                            (relatedProduct.price * relatedProduct.discountPercentage) / 100
+                            (relatedProduct.price * (relatedProduct.discountPercentage || 0)) / 100
                           ).toFixed(2)}
                         </p>
                       </div>
@@ -449,7 +417,8 @@ export default function ProductDetailPage({ params }) {
                   </Card>
                 </Link>
               ))}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </div>

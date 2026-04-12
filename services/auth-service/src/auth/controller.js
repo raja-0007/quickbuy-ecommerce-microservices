@@ -40,10 +40,45 @@ const getMe = async (req, res) => {
     }
 }
 
+const getAllAuthUsers = async (req, res) => {
+    try {
+        const users = await services.getAllAuthUsers();
+        res.status(200).json({ status: 'success', users });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+const updateRole = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { role } = req.body;
+        const updatedUser = await services.updateRole(userId, role);
+        res.status(200).json({ status: 'success', user: updatedUser });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
+const updateStatus = async (req, res) => {
+    try {
+        const { userId } = req.params;
+        const { status } = req.body;
+        const updatedUser = await services.updateStatus(userId, status);
+        res.status(200).json({ status: 'success', user: updatedUser });
+    } catch (error) {
+        res.status(400).json({ error: error.message });
+    }
+};
+
 const controllers = {
     register,
     login,
-    getMe, externalLogin
+    getMe,
+    externalLogin,
+    getAllAuthUsers,
+    updateRole,
+    updateStatus,
 }
 
 module.exports = controllers;

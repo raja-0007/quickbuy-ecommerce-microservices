@@ -78,10 +78,38 @@ const getUserById = async (userId) => {
     return userDetails;
 }
 
+const updateRole = async (userId, role) => {
+    const updatedUser = await user.userModel.findByIdAndUpdate(
+        userId,
+        { role },
+        { new: true }
+    );
+    if (!updatedUser) throw new Error('User not found');
+    return updatedUser;
+};
+
+const updateStatus = async (userId, status) => {
+    const updatedUser = await user.userModel.findByIdAndUpdate(
+        userId,
+        { status },
+        { new: true }
+    );
+    if (!updatedUser) throw new Error('User not found');
+    return updatedUser;
+};
+
+const getAllAuthUsers = async () => {
+    return await user.userModel.find({}, { password: 0 });
+};
+
 const services = {
     register,
     login,
-    getUserById, externalLogin
+    getUserById,
+    externalLogin,
+    updateRole,
+    updateStatus,
+    getAllAuthUsers,
 };
 
 module.exports = services;

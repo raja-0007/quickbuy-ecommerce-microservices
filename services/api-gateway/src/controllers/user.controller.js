@@ -56,6 +56,24 @@ const deleteUser = async(req, res) => {
     }
 }
 
+const updateUserRole = async(req, res) => {
+    try{
+        const resp = await axios.put(`${process.env.AUTH_BASE_URL}/updateRole/${req.params.userId}`, req.body);
+        res.status(resp.status).json(resp.data);
+    }catch(err){
+        res.status(err.response?.status || 500).json({ error: err.message });
+    }
+}
+
+const updateUserStatus = async(req, res) => {
+    try{
+        const resp = await axios.put(`${process.env.AUTH_BASE_URL}/updateStatus/${req.params.userId}`, req.body);
+        res.status(resp.status).json(resp.data);
+    }catch(err){
+        res.status(err.response?.status || 500).json({ error: err.message });
+    }
+}
+
 module.exports = {
-    getAllUsers, getProfile, createUser, updateUser, deleteUser, updateAddress
+    getAllUsers, getProfile, createUser, updateUser, deleteUser, updateAddress, updateUserRole, updateUserStatus
 };

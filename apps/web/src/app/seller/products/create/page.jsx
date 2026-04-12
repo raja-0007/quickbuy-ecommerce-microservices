@@ -9,9 +9,11 @@ import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { ChevronLeft } from 'lucide-react'
 import { axiosHandle } from '@/lib/api'
+import { useSession } from 'next-auth/react'
 
 export default function CreateProductPage() {
   const router = useRouter()
+  const { data: session } = useSession()
   const [formData, setFormData] = useState({
     title: '',
     brand: '',
@@ -71,6 +73,10 @@ export default function CreateProductPage() {
     data.append(key, formData[key])
   })
 
+  if (session?.user?.id) {
+    data.append('sellerUserId', session.user.id)
+  }
+
   // append multiple images
   images.forEach((file) => {
     data.append("images", file) // 👈 must match backend
@@ -86,7 +92,7 @@ export default function CreateProductPage() {
     
     console.log("Created:", res.data)
 
-    // router.push("/seller/products")
+    router.push("/seller/products")
   } catch (err) {
     console.error(err)
   }
@@ -161,7 +167,7 @@ export default function CreateProductPage() {
                 </div>
                 <div>
                   <Label htmlFor="price" className="text-foreground">
-                    Price (₹) *
+                    Price ($) *
                   </Label>
                   <Input
                     id="price"

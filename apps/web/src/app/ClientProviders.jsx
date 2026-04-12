@@ -10,6 +10,26 @@ import Script from "next/script";
 import { Provider } from "react-redux";
 import store from "@/redux/store";
 import { SocketProvider } from "@/contexts/useSocket";
+import { usePathname } from "next/navigation";
+
+function AppShell({ children, token }) {
+  const pathname = usePathname();
+  const hiddenNavRoutes = ['/admin', '/seller'];
+  const hideNav = hiddenNavRoutes.some((r) => pathname.startsWith(r));
+
+  return (
+    <SocketProvider token={token}>
+      <SearchProvider>
+        {!hideNav && (
+          <Suspense fallback={null}>
+            <Navbar />
+          </Suspense>
+        )}
+        {children}
+      </SearchProvider>
+    </SocketProvider>
+  );
+}
 
 export default function ClientProviders({ children, token }) {
   return (
@@ -19,25 +39,18 @@ export default function ClientProviders({ children, token }) {
         strategy="afterInteractive"
       />
       <Provider store={store}>
-
-
-          <ThemeProvider
-            attribute="class"
-            defaultTheme="light"
-            enableSystem
-            storageKey="theme"
-          >
-            <SessionProvider>
-        <SocketProvider token={token}>
-              <SearchProvider>
-                <Suspense fallback={null}>
-                  <Navbar />
-                </Suspense>
-                {children}
-              </SearchProvider>
-        </SocketProvider>
-            </SessionProvider>
-          </ThemeProvider>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="light"
+          enableSystem
+          storageKey="theme"
+        >
+          <SessionProvider>
+            <AppShell token={token}>
+              {children}
+            </AppShell>
+          </SessionProvider>
+        </ThemeProvider>
       </Provider>
       <Toaster />
     </>
