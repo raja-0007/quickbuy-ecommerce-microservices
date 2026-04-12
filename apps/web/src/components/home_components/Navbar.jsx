@@ -37,14 +37,14 @@ const Navbar = () => {
     debounced(query)
   }, [])
 
-  // Fetch cart on mount so badge count is accurate immediately
-  useEffect(() => {
-    if (status === 'authenticated') {
-      axiosHandle.get('/orders/cart/getCart')
-        .then(res => { if (res.data) dispatch(setCart(res.data)) })
-        .catch(() => {})
-    }
-  }, [status])
+  // // Fetch cart on mount so badge count is accurate immediately
+  // useEffect(() => {
+  //   if (status === 'authenticated') {
+  //     axiosHandle.get('/orders/cart/getCart')
+  //       .then(res => { if (res.data) dispatch(setCart(res.data)) })
+  //       .catch(() => {})
+  //   }
+  // }, [status])
 
   const debounced = useDebouncedCallback(
     // function
