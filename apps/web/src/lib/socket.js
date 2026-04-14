@@ -4,8 +4,9 @@ let socket = null;
 
 export const initSocket = (token) => {
     if (!socket) {
+        const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
 
-        socket = io("http://localhost:4005", {
+        socket = io(socketUrl, {
             auth: {
                 token
             }
