@@ -16,17 +16,18 @@ const ExploreCategories = async () => {
         )
 
         const categoriesResponse = await res.json()
-        categories = categoriesResponse.categories
+        categories = categoriesResponse?.categories ?? []
 
     } catch (err) {
         console.log('Error fetching deals:', err)
+        categories = []
     }
     return (
         <div className='mt-36'>
             <div className='font-bold text-lg'>Explore Categories</div>
             <div className='relative w-[97%] mx-auto'><Carousel className="w-full mt-10">
                 <CarouselContent className={' -ml-[0]'}>
-                    {categories.map((item, index) => (
+                    {categories && categories.map((item, index) => (
                         <CarouselItem key={index} className={'basis-1/6 pl-0'}>
                             <Link href={`/search-results?searchQuery=${item.title}`} className="p- h-full">
                                 <Card className={'h-full py-0 border-0 bg-transparent shadow-none'}>
