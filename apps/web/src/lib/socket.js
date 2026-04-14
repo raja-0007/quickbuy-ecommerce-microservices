@@ -5,6 +5,7 @@ let socket = null;
 export const initSocket = (token) => {
     if (!socket) {
         const socketUrl = process.env.NEXT_PUBLIC_SOCKET_URL;
+        console.log('socket url:', socketUrl)
 
         socket = io(socketUrl, {
             auth: {
