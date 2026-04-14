@@ -10,6 +10,7 @@ const productSchema = new mongoose.Schema({
     stock: { type: Number, required: true },
     tags: { type: [String] },
     brand: { type: String, required: true },
+    sellerUserId: { type: mongoose.Schema.Types.ObjectId, ref: 'users', required: true, index: true },
     sku: { type: String, required: true, unique: true },
     weight: { type: Number },
     dimensions: {
@@ -27,7 +28,7 @@ const productSchema = new mongoose.Schema({
         reviewerName: { type: String },
         reviewerEmail: { type: String },
         date: { type: Date, default: Date.now }
-    }, { timestamps: true }],
+    }],
     returnPolicy: { type: String },
     minimumOrderQuantity: { type: Number, default: 1 },
     thumbnail: { type: String, required: true },

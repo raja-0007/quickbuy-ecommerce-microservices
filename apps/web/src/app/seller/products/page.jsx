@@ -1,8 +1,10 @@
 'use client'
 
-import React, { useState, useMemo } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
+import Link from 'next/link'
+import { useSession } from 'next-auth/react'
 import { Button } from '@/components/ui/button'
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import {
   Dialog,
@@ -11,499 +13,315 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog'
-import { Edit2, Eye, Trash2, Search } from 'lucide-react'
+import { Eye, Package, Plus, Search } from 'lucide-react'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { axiosHandle } from '@/lib/api'
 
-const MOCK_SELLER_ORDERS = [
-  {
-    _id: '69845d8b5510f78c0d30b16e',
-    orderId: 'ORD-001',
-    customer: 'John Doe',
-    email: 'john@example.com',
-    items: [
-      {
-        productId: '696f488435b4699c2f11f515',
-        title: 'Oppo A57',
-        quantity: 2,
-        price: 249.99,
-        image: 'https://cdn.dummyjson.com/product-images/smartphones/oppo-a57/1.webp',
-      },
-    ],
-    totalAmount: 499.98,
-    status: 'pending',
-    createdAt: '2026-02-05T09:06:19.339Z',
-  },
-  {
-    _id: '69845d8b5510f78c0d30b17e',
-    orderId: 'ORD-002',
-    customer: 'Jane Smith',
-    email: 'jane@example.com',
-    items: [
-      {
-        productId: '696f488435b4699c2f11f516',
-        title: 'Samsung Galaxy A50',
-        quantity: 1,
-        price: 349.99,
-        image: 'https://cdn.dummyjson.com/product-images/smartphones/samsung-a50/1.webp',
-      },
-      {
-        productId: '696f488435b4699c2f11f520',
-        title: 'Samsung Galaxy Buds Pro',
-        quantity: 2,
-        price: 149.99,
-        image: 'https://cdn.dummyjson.com/product-images/accessories/galaxy-buds/1.webp',
-      },
-    ],
-    totalAmount: 649.97,
-    status: 'processing',
-    createdAt: '2026-01-28T14:22:10.123Z',
-  },
-  {
-    _id: '69845d8b5510f78c0d30b18e',
-    orderId: 'ORD-003',
-    customer: 'Mike Johnson',
-    email: 'mike@example.com',
-    items: [
-      {
-        productId: '696f488435b4699c2f11f517',
-        title: 'iPhone 14 Pro',
-        quantity: 1,
-        price: 999.99,
-        image: 'https://cdn.dummyjson.com/product-images/smartphones/iphone-14/1.webp',
-      },
-    ],
-    totalAmount: 999.99,
-    status: 'shipped',
-    createdAt: '2026-01-15T10:45:33.456Z',
-  },
-  {
-    _id: '69845d8b5510f78c0d30b19e',
-    orderId: 'ORD-004',
-    customer: 'Sarah Williams',
-    email: 'sarah@example.com',
-    items: [
-      {
-        productId: '696f488435b4699c2f11f515',
-        title: 'Oppo A57',
-        quantity: 1,
-        price: 249.99,
-        image: 'https://cdn.dummyjson.com/product-images/smartphones/oppo-a57/1.webp',
-      },
-    ],
-    totalAmount: 249.99,
-    status: 'delivered',
-    createdAt: '2026-01-05T08:30:45.789Z',
-  },
-  {
-    _id: '69845d8b5510f78c0d30b20e',
-    orderId: 'ORD-005',
-    customer: 'Robert Brown',
-    email: 'robert@example.com',
-    items: [
-      {
-        productId: '696f488435b4699c2f11f516',
-        title: 'Samsung Galaxy A50',
-        quantity: 3,
-        price: 349.99,
-        image: 'https://cdn.dummyjson.com/product-images/smartphones/samsung-a50/1.webp',
-      },
-    ],
-    totalAmount: 1049.97,
-    status: 'delivered',
-    createdAt: '2025-12-28T12:15:22.456Z',
-  },
-]
-
-const ORDER_STATUSES = {
-  pending: { label: 'Pending', color: 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-400' },
-  processing: { label: 'Processing', color: 'bg-blue-500/20 text-blue-700 dark:text-blue-400' },
-  shipped: { label: 'Shipped', color: 'bg-purple-500/20 text-purple-700 dark:text-purple-400' },
-  delivered: { label: 'Delivered', color: 'bg-green-500/20 text-green-700 dark:text-green-400' },
-}
-
-const NEXT_STATUS = {
-  pending: 'processing',
-  processing: 'shipped',
-  shipped: 'delivered',
-  delivered: null,
-}
-
-export default function SellerOrdersPage() {
-  const [orders, setOrders] = useState(MOCK_SELLER_ORDERS)
-  const [filterStatus, setFilterStatus] = useState('all')
+export default function SellerProductsPage() {
+  const { data: session, status } = useSession()
+  const [products, setProducts] = useState([])
+  const [loading, setLoading] = useState(true)
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedOrder, setSelectedOrder] = useState(null)
-  const [showStatusDialog, setShowStatusDialog] = useState(false)
+  const [selectedProduct, setSelectedProduct] = useState(null)
 
-  const filteredOrders = useMemo(() => {
-    let filtered = orders
-    
-    if (filterStatus !== 'all') {
-      filtered = filtered.filter((order) => order.status === filterStatus)
-    }
-    
-    if (searchQuery) {
-      filtered = filtered.filter(
-        (order) =>
-          order.orderId.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          order.customer.toLowerCase().includes(searchQuery.toLowerCase()) ||
-          order.email.toLowerCase().includes(searchQuery.toLowerCase())
-      )
-    }
-    
-    return filtered
-  }, [orders, filterStatus, searchQuery])
+  useEffect(() => {
+    if (status === 'loading') return
 
-  const handleUpdateStatus = (orderId, newStatus) => {
-    setOrders(
-      orders.map((order) =>
-        order._id === orderId ? { ...order, status: newStatus } : order
-      )
+    if (status !== 'authenticated' || !session?.user?.id) {
+      setLoading(false)
+      setProducts([])
+      return
+    }
+
+    const fetchProducts = async () => {
+      setLoading(true)
+      try {
+        const res = await axiosHandle.get('/products/get-products', {
+          params: {
+            sellerUserId: session.user.id,
+            limit: 200,
+            page: 1,
+          },
+        })
+        setProducts(Array.isArray(res.data?.products) ? res.data.products : [])
+      } catch (error) {
+        console.error('Failed to fetch seller products:', error)
+        setProducts([])
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchProducts()
+  }, [session?.user?.id, status])
+
+  const filteredProducts = useMemo(() => {
+    if (!searchQuery.trim()) return products
+    const q = searchQuery.toLowerCase()
+    return products.filter(
+      (p) =>
+        String(p.title || '')
+          .toLowerCase()
+          .includes(q) ||
+        String(p.brand || '')
+          .toLowerCase()
+          .includes(q) ||
+        String(p.category || '')
+          .toLowerCase()
+          .includes(q) ||
+        String(p.sku || '')
+          .toLowerCase()
+          .includes(q)
     )
-    setShowStatusDialog(false)
-    setSelectedOrder(null)
-  }
+  }, [products, searchQuery])
 
-  const stats = {
-    totalOrders: orders.length,
-    pending: orders.filter((o) => o.status === 'pending').length,
-    processing: orders.filter((o) => o.status === 'processing').length,
-    shipped: orders.filter((o) => o.status === 'shipped').length,
-    delivered: orders.filter((o) => o.status === 'delivered').length,
-    totalRevenue: orders.reduce((sum, o) => sum + o.totalAmount, 0),
-  }
+  const stats = useMemo(() => {
+    const total = products.length
+    const lowStock = products.filter((p) => Number(p.stock) < 10).length
+    const inStock = products.filter(
+      (p) => String(p.availabilityStatus || '').toLowerCase().includes('stock')
+    ).length
+    return { total, lowStock, inStock }
+  }, [products])
+
+  const authBlocking = status !== 'loading' && status !== 'authenticated'
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Header */}
       <div className="border-b border-border bg-card">
-        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8">
-          <h1 className="text-3xl font-bold text-foreground">Orders</h1>
-          <p className="mt-1 text-sm text-muted-foreground">Manage your orders and update statuses</p>
+        <div className="mx-auto max-w-7xl px-4 py-6 sm:px-6 lg:px-8 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold text-foreground">My products</h1>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Listings linked to your seller account
+            </p>
+          </div>
+          <Button asChild className="bg-primary hover:bg-primary/90 w-full sm:w-auto">
+            <Link href="/seller/products/create" className="inline-flex items-center gap-2">
+              <Plus size={18} />
+              Add product
+            </Link>
+          </Button>
         </div>
       </div>
 
-      {/* Main Content */}
       <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-        {/* Stats Cards */}
-        <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-6">
-          <Card
-            className="border-border bg-card cursor-pointer hover:shadow-md transition"
-            onClick={() => setFilterStatus('all')}
-          >
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground">Total Orders</p>
-              <p className="mt-2 text-2xl font-bold text-primary">{stats.totalOrders}</p>
+        {authBlocking && (
+          <Card className="border-border bg-card mb-8">
+            <CardContent className="p-6">
+              <p className="text-muted-foreground">
+                Sign in as a seller to view your products.
+              </p>
+              <Button asChild className="mt-4">
+                <Link href="/login">Go to login</Link>
+              </Button>
             </CardContent>
           </Card>
-          <Card
-            className="border-border bg-card cursor-pointer hover:shadow-md transition"
-            onClick={() => setFilterStatus('pending')}
-          >
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground">Pending</p>
-              <p className="mt-2 text-2xl font-bold text-yellow-500">{stats.pending}</p>
-            </CardContent>
-          </Card>
-          <Card
-            className="border-border bg-card cursor-pointer hover:shadow-md transition"
-            onClick={() => setFilterStatus('processing')}
-          >
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground">Processing</p>
-              <p className="mt-2 text-2xl font-bold text-blue-500">{stats.processing}</p>
-            </CardContent>
-          </Card>
-          <Card
-            className="border-border bg-card cursor-pointer hover:shadow-md transition"
-            onClick={() => setFilterStatus('shipped')}
-          >
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground">Shipped</p>
-              <p className="mt-2 text-2xl font-bold text-purple-500">{stats.shipped}</p>
-            </CardContent>
-          </Card>
-          <Card
-            className="border-border bg-card cursor-pointer hover:shadow-md transition"
-            onClick={() => setFilterStatus('delivered')}
-          >
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground">Delivered</p>
-              <p className="mt-2 text-2xl font-bold text-green-500">{stats.delivered}</p>
-            </CardContent>
-          </Card>
-          <Card className="border-border bg-card">
-            <CardContent className="p-4">
-              <p className="text-xs text-muted-foreground">Revenue</p>
-              <p className="mt-2 text-2xl font-bold text-accent">₹{stats.totalRevenue.toFixed(0)}</p>
-            </CardContent>
-          </Card>
-        </div>
+        )}
 
-        {/* Search & Filter */}
-        <Card className="mb-6 border-border bg-card">
-          <CardContent className="p-6">
-            <div className="flex flex-col gap-4 sm:flex-row sm:items-end">
-              <div className="flex-1">
-                <Label className="text-foreground">Search Orders</Label>
+        {!authBlocking && (
+          <>
+            <div className="mb-8 grid grid-cols-2 gap-4 sm:grid-cols-3">
+              <Card className="border-border bg-card">
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground">Total products</p>
+                  <p className="mt-2 text-2xl font-bold text-primary">{stats.total}</p>
+                </CardContent>
+              </Card>
+              <Card className="border-border bg-card">
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground">Listed as in stock</p>
+                  <p className="mt-2 text-2xl font-bold text-green-600 dark:text-green-400">
+                    {stats.inStock}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card className="border-border bg-card col-span-2 sm:col-span-1">
+                <CardContent className="p-4">
+                  <p className="text-xs text-muted-foreground">Low stock (&lt; 10)</p>
+                  <p className="mt-2 text-2xl font-bold text-amber-600 dark:text-amber-400">
+                    {stats.lowStock}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="mb-6 border-border bg-card">
+              <CardContent className="p-6">
+                <Label className="text-foreground">Search</Label>
                 <div className="relative mt-2">
                   <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
                   <Input
-                    placeholder="Search by order ID, customer, or email..."
+                    placeholder="Search by title, brand, category, or SKU..."
                     value={searchQuery}
                     onChange={(e) => setSearchQuery(e.target.value)}
                     className="pl-10 border-border bg-background text-foreground"
                   />
                 </div>
-              </div>
-              <div>
-                <Label className="text-foreground">Status</Label>
-                <select
-                  value={filterStatus}
-                  onChange={(e) => setFilterStatus(e.target.value)}
-                  className="mt-2 rounded-md border border-border bg-background px-3 py-2 text-foreground"
-                >
-                  <option value="all">All Status</option>
-                  <option value="pending">Pending</option>
-                  <option value="processing">Processing</option>
-                  <option value="shipped">Shipped</option>
-                  <option value="delivered">Delivered</option>
-                </select>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+              </CardContent>
+            </Card>
 
-        {/* Orders Table */}
-        <Card className="border-border bg-card overflow-hidden">
-          <CardContent className="p-0">
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead className="border-b border-border bg-muted/50">
-                  <tr>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                      Order ID
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                      Customer
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                      Items
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                      Amount
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                      Date
-                    </th>
-                    <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
-                      Status
-                    </th>
-                    <th className="px-6 py-3 text-right text-sm font-semibold text-foreground">
-                      Actions
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredOrders.length === 0 ? (
-                    <tr>
-                      <td colSpan="7" className="px-6 py-8 text-center">
-                        <p className="text-muted-foreground">No orders found</p>
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredOrders.map((order) => {
-                      const statusInfo = ORDER_STATUSES[order.status]
-                      const nextStatus = NEXT_STATUS[order.status]
-                      
-                      return (
-                        <tr
-                          key={order._id}
-                          className="border-t border-border hover:bg-muted/50 transition"
-                        >
-                          <td className="px-6 py-4">
-                            <p className="font-semibold text-foreground">{order.orderId}</p>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div>
-                              <p className="font-medium text-foreground">{order.customer}</p>
-                              <p className="text-xs text-muted-foreground">{order.email}</p>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div>
-                              <p className="text-sm text-foreground font-medium">
-                                {order.items.length} item{order.items.length !== 1 ? 's' : ''}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {order.items.map((item) => item.title).join(', ')}
-                              </p>
-                            </div>
-                          </td>
-                          <td className="px-6 py-4">
-                            <p className="font-semibold text-foreground">
-                              ₹{order.totalAmount.toFixed(2)}
-                            </p>
-                          </td>
-                          <td className="px-6 py-4">
-                            <p className="text-sm text-muted-foreground">
-                              {new Date(order.createdAt).toLocaleDateString('en-US', {
-                                year: 'numeric',
-                                month: 'short',
-                                day: 'numeric',
-                              })}
-                            </p>
-                          </td>
-                          <td className="px-6 py-4">
-                            <Badge className={statusInfo.color}>
-                              {statusInfo.label}
-                            </Badge>
-                          </td>
-                          <td className="px-6 py-4">
-                            <div className="flex justify-end gap-2">
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => setSelectedOrder(order)}
-                                className="text-primary hover:bg-primary/10"
-                              >
-                                <Eye size={18} />
-                              </Button>
-                              {nextStatus && (
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => {
-                                    setSelectedOrder(order)
-                                    setShowStatusDialog(true)
-                                  }}
-                                  className="text-primary hover:bg-primary/10"
-                                >
-                                  <Edit2 size={18} />
-                                </Button>
-                              )}
-                            </div>
+            <Card className="border-border bg-card overflow-hidden">
+              <CardContent className="p-0">
+                <div className="overflow-x-auto">
+                  <table className="w-full">
+                    <thead className="border-b border-border bg-muted/50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                          Product
+                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                          Category
+                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                          Price
+                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                          Stock
+                        </th>
+                        <th className="px-6 py-3 text-left text-sm font-semibold text-foreground">
+                          Status
+                        </th>
+                        <th className="px-6 py-3 text-right text-sm font-semibold text-foreground">
+                          Actions
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {loading ? (
+                        <tr>
+                          <td colSpan={6} className="px-6 py-8 text-center">
+                            <p className="text-muted-foreground">Loading products...</p>
                           </td>
                         </tr>
-                      )
-                    })
-                  )}
-                </tbody>
-              </table>
-            </div>
-          </CardContent>
-        </Card>
+                      ) : filteredProducts.length === 0 ? (
+                        <tr>
+                          <td colSpan={6} className="px-6 py-12 text-center">
+                            <Package className="mx-auto h-10 w-10 text-muted-foreground mb-3" />
+                            <p className="text-muted-foreground mb-4">
+                              {products.length === 0
+                                ? 'No products yet. Create your first listing.'
+                                : 'No products match your search.'}
+                            </p>
+                            {products.length === 0 && (
+                              <Button asChild>
+                                <Link href="/seller/products/create">Create product</Link>
+                              </Button>
+                            )}
+                          </td>
+                        </tr>
+                      ) : (
+                        filteredProducts.map((product) => {
+                          const thumb =
+                            product.thumbnail ||
+                            (Array.isArray(product.images) && product.images[0]) ||
+                            '/placeholder.svg'
+                          const low = Number(product.stock) < 10
+
+                          return (
+                            <tr
+                              key={product._id}
+                              className="border-t border-border hover:bg-muted/50 transition"
+                            >
+                              <td className="px-6 py-4">
+                                <div className="flex items-center gap-3">
+                                  <img
+                                    src={thumb}
+                                    alt=""
+                                    className="h-12 w-12 rounded-md object-cover border border-border"
+                                  />
+                                  <div>
+                                    <p className="font-medium text-foreground line-clamp-1">
+                                      {product.title}
+                                    </p>
+                                    <p className="text-xs text-muted-foreground">
+                                      {product.brand}
+                                    </p>
+                                  </div>
+                                </div>
+                              </td>
+                              <td className="px-6 py-4 text-sm text-foreground capitalize">
+                                {product.category || '—'}
+                              </td>
+                              <td className="px-6 py-4 font-semibold text-foreground">
+                                ${Number(product.price || 0).toFixed(2)}
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className={low ? 'text-amber-600 font-medium' : ''}>
+                                  {product.stock ?? '—'}
+                                </span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <Badge
+                                  variant="outline"
+                                  className="border-border text-foreground"
+                                >
+                                  {product.availabilityStatus || '—'}
+                                </Badge>
+                              </td>
+                              <td className="px-6 py-4">
+                                <div className="flex justify-end gap-2">
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => setSelectedProduct(product)}
+                                    className="text-primary hover:bg-primary/10"
+                                  >
+                                    <Eye size={18} />
+                                  </Button>
+                                  <Button variant="ghost" size="sm" asChild>
+                                    <Link
+                                      href={`/product/${product._id}`}
+                                      className="text-primary hover:bg-primary/10"
+                                    >
+                                      Store
+                                    </Link>
+                                  </Button>
+                                </div>
+                              </td>
+                            </tr>
+                          )
+                        })
+                      )}
+                    </tbody>
+                  </table>
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
 
-      {/* Order Details Dialog */}
-      {selectedOrder && !showStatusDialog && (
-        <Dialog open={!!selectedOrder} onOpenChange={() => setSelectedOrder(null)}>
-          <DialogContent className="border-border bg-card max-w-2xl">
+      {selectedProduct && (
+        <Dialog open={!!selectedProduct} onOpenChange={() => setSelectedProduct(null)}>
+          <DialogContent className="border-border bg-card max-w-lg">
             <DialogHeader>
-              <DialogTitle className="text-foreground">{selectedOrder.orderId}</DialogTitle>
-              <DialogDescription>Order details and items</DialogDescription>
-            </DialogHeader>
-            <div className="space-y-4">
-              {/* Customer Info */}
-              <div className="rounded-lg bg-muted/50 p-4">
-                <h4 className="text-sm font-semibold text-foreground mb-2">Customer Information</h4>
-                <div className="grid grid-cols-2 gap-4 text-sm">
-                  <div>
-                    <p className="text-muted-foreground">Name</p>
-                    <p className="font-medium text-foreground">{selectedOrder.customer}</p>
-                  </div>
-                  <div>
-                    <p className="text-muted-foreground">Email</p>
-                    <p className="font-medium text-foreground">{selectedOrder.email}</p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Items */}
-              <div className="rounded-lg bg-muted/50 p-4">
-                <h4 className="text-sm font-semibold text-foreground mb-3">Order Items</h4>
-                <div className="space-y-2">
-                  {selectedOrder.items.map((item, idx) => (
-                    <div key={idx} className="flex gap-3 items-start">
-                      <img
-                        src={item.image}
-                        alt={item.title}
-                        className="h-12 w-12 rounded object-cover"
-                      />
-                      <div className="flex-1">
-                        <p className="text-sm font-medium text-foreground">{item.title}</p>
-                        <p className="text-xs text-muted-foreground">
-                          Qty: {item.quantity} × ₹{item.price.toFixed(2)}
-                        </p>
-                      </div>
-                      <p className="text-sm font-semibold text-foreground">
-                        ₹{(item.quantity * item.price).toFixed(2)}
-                      </p>
-                    </div>
-                  ))}
-                </div>
-              </div>
-
-              {/* Total */}
-              <div className="flex justify-end">
-                <div className="text-right">
-                  <p className="text-sm text-muted-foreground">Total Amount</p>
-                  <p className="text-lg font-bold text-primary">₹{selectedOrder.totalAmount.toFixed(2)}</p>
-                </div>
-              </div>
-            </div>
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Status Update Dialog */}
-      {selectedOrder && showStatusDialog && (
-        <Dialog open={showStatusDialog} onOpenChange={setShowStatusDialog}>
-          <DialogContent className="border-border bg-card">
-            <DialogHeader>
-              <DialogTitle className="text-foreground">Update Order Status</DialogTitle>
+              <DialogTitle className="text-foreground">{selectedProduct.title}</DialogTitle>
               <DialogDescription>
-                Update the status for order {selectedOrder.orderId}
+                SKU: {selectedProduct.sku || '—'} · Brand: {selectedProduct.brand || '—'}
               </DialogDescription>
             </DialogHeader>
-            <div className="space-y-4">
-              <div className="rounded-lg bg-muted/50 p-4">
-                <p className="text-sm text-muted-foreground mb-2">Current Status</p>
-                <Badge className={ORDER_STATUSES[selectedOrder.status].color}>
-                  {ORDER_STATUSES[selectedOrder.status].label}
-                </Badge>
-              </div>
-
-              {NEXT_STATUS[selectedOrder.status] && (
-                <div className="rounded-lg bg-muted/50 p-4">
-                  <p className="text-sm text-muted-foreground mb-2">Update To</p>
-                  <Badge className={ORDER_STATUSES[NEXT_STATUS[selectedOrder.status]].color}>
-                    {ORDER_STATUSES[NEXT_STATUS[selectedOrder.status]].label}
-                  </Badge>
+            <div className="space-y-3 text-sm">
+              <div className="rounded-lg bg-muted/50 p-4 grid grid-cols-2 gap-2">
+                <div>
+                  <p className="text-muted-foreground">Price</p>
+                  <p className="font-semibold text-foreground">
+                    ${Number(selectedProduct.price || 0).toFixed(2)}
+                  </p>
                 </div>
-              )}
-
-              <div className="flex gap-3 pt-4">
-                <Button
-                  onClick={() => {
-                    handleUpdateStatus(selectedOrder._id, NEXT_STATUS[selectedOrder.status])
-                  }}
-                  className="flex-1 bg-primary hover:bg-primary/90"
-                >
-                  Confirm Update
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setShowStatusDialog(false)
-                    setSelectedOrder(null)
-                  }}
-                  className="flex-1 border-border text-foreground hover:bg-secondary"
-                >
-                  Cancel
-                </Button>
+                <div>
+                  <p className="text-muted-foreground">Stock</p>
+                  <p className="font-semibold text-foreground">{selectedProduct.stock ?? '—'}</p>
+                </div>
+                <div className="col-span-2">
+                  <p className="text-muted-foreground">Description</p>
+                  <p className="text-foreground line-clamp-6">{selectedProduct.description || '—'}</p>
+                </div>
               </div>
+              <Button asChild className="w-full">
+                <Link href={`/product/${selectedProduct._id}`}>View on storefront</Link>
+              </Button>
             </div>
           </DialogContent>
         </Dialog>

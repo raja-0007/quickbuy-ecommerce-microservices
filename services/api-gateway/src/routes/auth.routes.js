@@ -40,6 +40,15 @@ router.post('/auth-login', async (req, res) => {
     }
 });
 
+router.get('/getAllUsers', authMiddleware, async (req, res) => {
+    try{
+        const response = await axios.get(`${process.env.AUTH_BASE_URL}/getAllUsers`);
+        res.status(response.status).json(response.data);
+    }catch(error){
+        res.status(error.status || 500).json({ error: error.message });
+    }
+});
+
 router.get('/me', authMiddleware, async (req, res) => {
     try{
         const response = await axios.get(`${process.env.AUTH_BASE_URL}/me`, {

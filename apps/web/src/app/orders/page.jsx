@@ -8,124 +8,6 @@ import { Badge } from '@/components/ui/badge'
 import { Clock, ChevronLeft } from 'lucide-react'
 import { axiosHandle } from '@/lib/api'
 
-const MOCK_ORDERS = [
-    {
-        _id: '69845d8b5510f78c0d30b16e',
-        items: [
-            {
-                productId: '696f488435b4699c2f11f515',
-                title: 'Oppo A57',
-                brand: 'Oppo',
-                category: 'smartphones',
-                price: 249.99,
-                quantity: 4,
-                imageUrl: 'https://cdn.dummyjson.com/product-images/smartphones/oppo-a57/1.webp',
-                description: 'Oppo A57 features a 6.56 inch AMOLED display with 120Hz refresh rate, Snapdragon 778G processor, and 50MP main camera. Fast charging and all-day battery life.',
-                discountPercentage: 2.43,
-                totalPrice: 243.92,
-                itemTotal: 975.66,
-            },
-        ],
-        priceDetails: {
-            subTotal: 975.66,
-            tax: 98.0,
-            shipping: 50.0,
-            discount: 0,
-            total: 1123.66,
-        },
-        paymentDetails: {
-            paymentId: 'pay_SDEUsxgpseqiEz',
-            method: 'Razorpay',
-            amount: 1123.66,
-            currency: 'INR',
-            status: 'PAID',
-        },
-        status: 'DELIVERED',
-        createdAt: '2026-02-05T09:06:19.339Z',
-    },
-    {
-        _id: '69845d8b5510f78c0d30b17e',
-        items: [
-            {
-                productId: '696f488435b4699c2f11f516',
-                title: 'Samsung Galaxy A50',
-                brand: 'Samsung',
-                category: 'smartphones',
-                price: 349.99,
-                quantity: 2,
-                imageUrl: 'https://cdn.dummyjson.com/product-images/smartphones/samsung-a50/1.webp',
-                description: 'Samsung Galaxy A50 with 6.4 inch Super AMOLED display, triple camera setup, and long battery life. Perfect for everyday use.',
-                discountPercentage: 5.0,
-                totalPrice: 332.49,
-                itemTotal: 664.98,
-            },
-            {
-                productId: '696f488435b4699c2f11f520',
-                title: 'Samsung Galaxy Buds Pro',
-                brand: 'Samsung',
-                category: 'accessories',
-                price: 149.99,
-                quantity: 1,
-                imageUrl: 'https://cdn.dummyjson.com/product-images/accessories/galaxy-buds/1.webp',
-                description: 'Premium wireless earbuds with active noise cancellation, 360 audio, and seamless Samsung device integration.',
-                discountPercentage: 10.0,
-                totalPrice: 134.99,
-                itemTotal: 134.99,
-            },
-        ],
-        priceDetails: {
-            subTotal: 799.97,
-            tax: 80.0,
-            shipping: 0,
-            discount: 0,
-            total: 879.97,
-        },
-        paymentDetails: {
-            paymentId: 'pay_SDEUsxgpseqiE0',
-            method: 'Credit Card',
-            amount: 879.97,
-            currency: 'INR',
-            status: 'PAID',
-        },
-        status: 'DELIVERED',
-        createdAt: '2026-01-28T14:22:10.123Z',
-    },
-    {
-        _id: '69845d8b5510f78c0d30b18e',
-        items: [
-            {
-                productId: '696f488435b4699c2f11f517',
-                title: 'iPhone 14 Pro',
-                brand: 'Apple',
-                category: 'smartphones',
-                price: 999.99,
-                quantity: 1,
-                imageUrl: 'https://cdn.dummyjson.com/product-images/smartphones/iphone-14/1.webp',
-                description: 'iPhone 14 Pro with Dynamic Island, Pro camera system, and A16 Bionic chip. Exceptional performance and stunning design.',
-                discountPercentage: 0,
-                totalPrice: 999.99,
-                itemTotal: 999.99,
-            },
-        ],
-        priceDetails: {
-            subTotal: 999.99,
-            tax: 100.0,
-            shipping: 25.0,
-            discount: 0,
-            total: 1124.99,
-        },
-        paymentDetails: {
-            paymentId: 'pay_SDEUsxgpseqiE1',
-            method: 'Debit Card',
-            amount: 1124.99,
-            currency: 'INR',
-            status: 'PAID',
-        },
-        status: 'PROCESSING',
-        createdAt: '2026-01-15T10:45:33.456Z',
-    },
-]
-
 export default function OrdersPage() {
     const [orders, setOrders] = useState([])
     const getOrders = async () => {
@@ -229,7 +111,7 @@ export default function OrdersPage() {
                                             {/* Price */}
                                             <div className="mt-auto pt-2">
                                                 <p className="text-xs font-bold text-foreground">
-                                                    ₹{item.totalPrice.toFixed(2)}
+                                                    ${item.totalPrice.toFixed(2)}
                                                 </p>
                                             </div>
                                         </div>
@@ -265,14 +147,14 @@ export default function OrdersPage() {
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Subtotal</span>
                                             <span className="font-medium text-foreground">
-                                                ₹{order.priceDetails.subTotal.toFixed(2)}
+                                                ${order.priceDetails.subTotal.toFixed(2)}
                                             </span>
                                         </div>
                                         {order.priceDetails.tax > 0 && (
                                             <div className="flex justify-between">
                                                 <span className="text-muted-foreground">Tax</span>
                                                 <span className="font-medium text-foreground">
-                                                    ₹{order.priceDetails.tax.toFixed(2)}
+                                                    ${order.priceDetails.tax.toFixed(2)}
                                                 </span>
                                             </div>
                                         )}
@@ -280,13 +162,13 @@ export default function OrdersPage() {
                                             <div className="flex justify-between">
                                                 <span className="text-muted-foreground">Shipping</span>
                                                 <span className="font-medium text-foreground">
-                                                    ₹{order.priceDetails.shipping.toFixed(2)}
+                                                    ${order.priceDetails.shipping.toFixed(2)}
                                                 </span>
                                             </div>
                                         )}
                                         <div className="border-t border-border pt-2 flex justify-between font-semibold">
                                             <span className="text-foreground">Total</span>
-                                            <span className="text-primary">₹{order.priceDetails.total.toFixed(2)}</span>
+                                            <span className="text-primary">${order.priceDetails.total.toFixed(2)}</span>
                                         </div>
                                     </div>
                                 </div>
@@ -304,7 +186,7 @@ export default function OrdersPage() {
                                         <div className="flex justify-between">
                                             <span className="text-muted-foreground">Amount</span>
                                             <span className="font-medium text-foreground">
-                                                ₹{order.paymentDetails.amount.toFixed(2)}
+                                                ${order.paymentDetails.amount.toFixed(2)}
                                             </span>
                                         </div>
                                         <div className="flex items-center justify-between pt-2 border-t border-border">

@@ -23,9 +23,9 @@ const getCategories = async(req, res) => {
 }
 const getAllProducts = async(req, res) => {
     try{
-        const {limit, page, searchQuery} = req.query;
+        const {limit, page, searchQuery, sellerUserId} = req.query;
             const resp = await axios.get(`${process.env.PRODUCT_BASE_URL}/get-products`, {
-                params: {limit, page, searchQuery}
+                params: {limit, page, searchQuery, sellerUserId}
             });
             // console.log('get products called', resp.data);
             res.status(resp.status).json(resp.data);
@@ -61,10 +61,24 @@ const getProductById = async(req, res)=>{
 
 const addProduct = async(req, res)=>{
     try{
-        const resp = await axios.post(`${process.env.PRODUCT_BASE_URL}/add-product`, req.body);
+        let imageUrls = [];
+
+        if (req.files && req.files.length > 0) {
+            imageUrls = req.files.map((file) => {
+                return `${req.protocol}://${req.get('host')}/uploads/${file.filename}`;
+            });
+        }
+
+        const productData = {
+            ...req.body,
+            sellerUserId: req.userId,
+            images: imageUrls
+        };
+
+        const resp = await axios.post(`${process.env.PRODUCT_BASE_URL}/add-product`, productData);
         res.status(resp.status).json(resp.data);
     }catch(err){
-        res.status(err.status).json({ error: err.message });
+        res.status(err.response?.status || 500).json({ error: err.response?.data || err.message });
     }
 }
 

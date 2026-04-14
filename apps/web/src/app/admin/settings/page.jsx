@@ -112,7 +112,7 @@ export default function AdminSettingsPage() {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
                 <Label htmlFor="minOrderValue" className="text-foreground">
-                  Minimum Order Value (₹)
+                  Minimum Order Value ($)
                 </Label>
                 <Input
                   id="minOrderValue"
@@ -125,7 +125,7 @@ export default function AdminSettingsPage() {
               </div>
               <div>
                 <Label htmlFor="maxOrderValue" className="text-foreground">
-                  Maximum Order Value (₹)
+                  Maximum Order Value ($)
                 </Label>
                 <Input
                   id="maxOrderValue"

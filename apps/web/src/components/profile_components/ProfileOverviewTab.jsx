@@ -205,7 +205,7 @@ export default function ProfileOverviewTab({
                         <p className="mt-1 text-xs font-medium text-primary">Qty: {item.quantity}</p>
 
                         <div className="mt-auto pt-2">
-                          <p className="text-xs font-bold text-foreground">Rs {item.totalPrice.toFixed(2)}</p>
+                          <p className="text-xs font-bold text-foreground">$ {item.totalPrice.toFixed(2)}</p>
                         </div>
                       </div>
 
@@ -232,23 +232,23 @@ export default function ProfileOverviewTab({
                     <div className="space-y-1 text-xs">
                       <div className="flex justify-between">
                         <span className="text-muted-foreground">Subtotal</span>
-                        <span className="font-medium text-foreground">Rs {order.priceDetails.subTotal.toFixed(2)}</span>
+                        <span className="font-medium text-foreground">$ {order.priceDetails.subTotal.toFixed(2)}</span>
                       </div>
                       {order.priceDetails.tax > 0 && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Tax</span>
-                          <span className="font-medium text-foreground">Rs {order.priceDetails.tax.toFixed(2)}</span>
+                          <span className="font-medium text-foreground">$ {order.priceDetails.tax.toFixed(2)}</span>
                         </div>
                       )}
                       {order.priceDetails.shipping > 0 && (
                         <div className="flex justify-between">
                           <span className="text-muted-foreground">Shipping</span>
-                          <span className="font-medium text-foreground">Rs {order.priceDetails.shipping.toFixed(2)}</span>
+                          <span className="font-medium text-foreground">$ {order.priceDetails.shipping.toFixed(2)}</span>
                         </div>
                       )}
                       <div className="flex justify-between border-t border-border pt-1 font-semibold">
                         <span className="text-foreground">Total</span>
-                        <span className="text-sm text-primary">Rs {order.priceDetails.total.toFixed(2)}</span>
+                        <span className="text-sm text-primary">$ {order.priceDetails.total.toFixed(2)}</span>
                       </div>
                     </div>
                   </div>

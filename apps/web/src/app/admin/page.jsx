@@ -1,39 +1,58 @@
+'use client'
 
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
-import { Users, ShoppingBag, Package, TrendingUp, AlertCircle, Settings } from 'lucide-react'
+import { Users, ShoppingBag, Package, TrendingUp, Settings, Loader2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
-
-const MOCK_STATS = {
-  totalUsers: 2543,
-  totalSellers: 148,
-  totalProducts: 8392,
-  totalOrders: 15284,
-  totalRevenue: 524890,
-  recentOrders: [
-    { id: 'ORD001', customer: 'John Doe', amount: 2499, status: 'completed' },
-    { id: 'ORD002', customer: 'Jane Smith', amount: 1850, status: 'processing' },
-    { id: 'ORD003', customer: 'Mike Johnson', amount: 3200, status: 'pending' },
-    { id: 'ORD004', customer: 'Sarah Williams', amount: 1599, status: 'completed' },
-    { id: 'ORD005', customer: 'Tom Brown', amount: 2150, status: 'shipped' },
-  ],
-  recentUsers: [
-    { id: 'U001', name: 'Alice Johnson', email: 'alice@example.com', role: 'user', joinDate: '2026-02-20' },
-    { id: 'U002', name: 'Bob Smith', email: 'bob@example.com', role: 'seller', joinDate: '2026-02-19' },
-    { id: 'U003', name: 'Carol Davis', email: 'carol@example.com', role: 'user', joinDate: '2026-02-18' },
-    { id: 'U004', name: 'David Lee', email: 'david@example.com', role: 'user', joinDate: '2026-02-17' },
-  ],
-}
+import { axiosHandle } from '@/lib/api'
 
 export default function AdminDashboard() {
+  const [stats, setStats] = useState(null)
+  const [loading, setLoading] = useState(true)
+
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const [usersRes, productsRes, ordersRes] = await Promise.all([
+          axiosHandle.get('/users/getAllUsers'),
+          axiosHandle.get('/products/get-products'),
+          axiosHandle.get('/orders/getAllOrders'),
+        ])
+
+        const users = Array.isArray(usersRes.data) ? usersRes.data : usersRes.data.users || []
+        const products = productsRes.data?.products || productsRes.data || []
+        const orders = Array.isArray(ordersRes.data) ? ordersRes.data : ordersRes.data.orders || []
+
+        const totalRevenue = orders.reduce((sum, o) => sum + (o.priceDetails?.total || 0), 0)
+
+        setStats({
+          totalUsers: users.length,
+          totalSellers: users.filter((u) => u.role === 'seller').length,
+          totalProducts: products.length,
+          totalOrders: orders.length,
+          totalRevenue,
+          recentOrders: orders.slice(-5).reverse(),
+          recentUsers: users.slice(-4).reverse(),
+        })
+      } catch {
+        // fail silently, show zeros
+        setStats({ totalUsers: 0, totalSellers: 0, totalProducts: 0, totalOrders: 0, totalRevenue: 0, recentOrders: [], recentUsers: [] })
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchStats()
+  }, [])
+
   const getStatusColor = (status) => {
     const colors = {
-      completed: 'bg-green-500 text-white',
-      processing: 'bg-blue-500 text-white',
-      pending: 'bg-yellow-500 text-white',
-      shipped: 'bg-purple-500 text-white',
+      CREATED: 'bg-yellow-500 text-white',
+      SHIPPED: 'bg-purple-500 text-white',
+      IN_TRANSIT: 'bg-blue-500 text-white',
+      DELIVERED: 'bg-green-500 text-white',
+      CANCELLED: 'bg-red-500 text-white',
     }
     return colors[status] || 'bg-gray-500 text-white'
   }
@@ -47,71 +66,75 @@ export default function AdminDashboard() {
     return colors[role] || 'bg-gray-100 text-gray-800'
   }
 
+  if (loading) {
+    return (
+      <div className="flex min-h-screen items-center justify-center">
+        <Loader2 className="h-8 w-8 animate-spin text-primary" />
+      </div>
+    )
+  }
+
   return (
     <div className="min-h-screen bg-background p-6">
       <div className="mx-auto max-w-7xl">
-        {/* Header */}
         <div className="mb-8">
           <h1 className="text-4xl font-bold text-foreground">Admin Dashboard</h1>
           <p className="text-muted-foreground mt-2">Platform overview and management</p>
         </div>
 
-        {/* Stats Cards */}
         <div className="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-5 mb-8">
           <Card className="border-border bg-card">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Total Users</p>
-                  <p className="text-2xl font-bold text-foreground">{MOCK_STATS.totalUsers}</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.totalUsers}</p>
                 </div>
                 <Users className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
-
           <Card className="border-border bg-card">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Sellers</p>
-                  <p className="text-2xl font-bold text-foreground">{MOCK_STATS.totalSellers}</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.totalSellers}</p>
                 </div>
                 <ShoppingBag className="h-8 w-8 text-accent" />
               </div>
             </CardContent>
           </Card>
-
           <Card className="border-border bg-card">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Products</p>
-                  <p className="text-2xl font-bold text-foreground">{MOCK_STATS.totalProducts}</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.totalProducts}</p>
                 </div>
                 <Package className="h-8 w-8 text-primary" />
               </div>
             </CardContent>
           </Card>
-
           <Card className="border-border bg-card">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Orders</p>
-                  <p className="text-2xl font-bold text-foreground">{MOCK_STATS.totalOrders}</p>
+                  <p className="text-2xl font-bold text-foreground">{stats.totalOrders}</p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-green-500" />
               </div>
             </CardContent>
           </Card>
-
           <Card className="border-border bg-card">
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
                   <p className="text-sm text-muted-foreground">Revenue</p>
-                  <p className="text-2xl font-bold text-foreground">₹{(MOCK_STATS.totalRevenue / 1000).toFixed(1)}K</p>
+                  <p className="text-2xl font-bold text-foreground">
+                    ${(stats.totalRevenue / 1000).toFixed(1)}K
+                  </p>
                 </div>
                 <TrendingUp className="h-8 w-8 text-accent" />
               </div>
@@ -119,9 +142,7 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Recent Activity */}
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Recent Orders */}
           <Card className="border-border bg-card">
             <CardHeader>
               <CardTitle className="text-foreground">Recent Orders</CardTitle>
@@ -129,14 +150,17 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {MOCK_STATS.recentOrders.map((order) => (
-                  <div key={order.id} className="flex items-center justify-between rounded-lg border border-border p-3">
+                {stats.recentOrders.length === 0 && (
+                  <p className="text-muted-foreground text-sm">No orders yet</p>
+                )}
+                {stats.recentOrders.map((order) => (
+                  <div key={order._id} className="flex items-center justify-between rounded-lg border border-border p-3">
                     <div>
-                      <p className="font-medium text-foreground">{order.id}</p>
-                      <p className="text-sm text-muted-foreground">{order.customer}</p>
+                      <p className="font-medium text-foreground text-xs">{order.orderId || order._id}</p>
+                      <p className="text-sm text-muted-foreground">{order.authUserId}</p>
                     </div>
                     <div className="text-right">
-                      <p className="font-semibold text-foreground">₹{order.amount}</p>
+                      <p className="font-semibold text-foreground">${order.priceDetails?.total || 0}</p>
                       <Badge className={getStatusColor(order.status)}>{order.status}</Badge>
                     </div>
                   </div>
@@ -148,7 +172,6 @@ export default function AdminDashboard() {
             </CardContent>
           </Card>
 
-          {/* Recent Users */}
           <Card className="border-border bg-card">
             <CardHeader>
               <CardTitle className="text-foreground">Recent Users</CardTitle>
@@ -156,8 +179,11 @@ export default function AdminDashboard() {
             </CardHeader>
             <CardContent>
               <div className="space-y-3">
-                {MOCK_STATS.recentUsers.map((user) => (
-                  <div key={user.id} className="flex items-center justify-between rounded-lg border border-border p-3">
+                {stats.recentUsers.length === 0 && (
+                  <p className="text-muted-foreground text-sm">No users yet</p>
+                )}
+                {stats.recentUsers.map((user) => (
+                  <div key={user._id} className="flex items-center justify-between rounded-lg border border-border p-3">
                     <div>
                       <p className="font-medium text-foreground">{user.name}</p>
                       <p className="text-sm text-muted-foreground">{user.email}</p>
@@ -173,7 +199,6 @@ export default function AdminDashboard() {
           </Card>
         </div>
 
-        {/* Quick Actions */}
         <Card className="border-border bg-card mt-6">
           <CardHeader>
             <CardTitle className="text-foreground">Quick Actions</CardTitle>
