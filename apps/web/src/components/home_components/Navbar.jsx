@@ -93,7 +93,7 @@ const Navbar = () => {
 
           <Link href={"/cart"} className='relative' title='Shopping Cart'>
             <ShoppingCart title="Shopping Cart" />
-            {cart.cartData && <Badge variant="destructive" className='absolute -top-1 -right-2'>{cart.cartData.items.length}</Badge>
+            {cart.cartData && <Badge variant="destructive" className='absolute -top-1 -right-2'>{cart?.cartData?.items?.length}</Badge>
             }          </Link>
 
           <Link href={"/wishlist"} title='Wishlist'><Heart title="Wishlist" /></Link>
