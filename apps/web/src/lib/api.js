@@ -3,7 +3,6 @@ import { getSession, signOut } from 'next-auth/react';
 // import { useRouter } from 'next/navigation';
 // const router = useRouter()
 const url = process.env.NEXT_PUBLIC_API_URL;
-console.log('API URL:', url);
 
 export const axiosHandle = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
