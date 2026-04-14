@@ -4,7 +4,7 @@ import LandingPage from '@/components/home_components/LandingPage';
 // import { axiosHandle } from '@/lib/api';
 
 export default async function Home() {
-  let deals = []
+  let deals = {}
 
   try {
     const res = await fetch(
@@ -14,11 +14,11 @@ export default async function Home() {
     )
 
     const dealsResponse = await res.json()
-    deals = dealsResponse?.deals ?? []   
+    deals = dealsResponse?.deals ?? {}   
 
   } catch (err) {
     console.log('Error fetching deals:', err)
-    deals = []
+    deals = {}
   }
   return (
     <div className='bg-background text-foreground'>
