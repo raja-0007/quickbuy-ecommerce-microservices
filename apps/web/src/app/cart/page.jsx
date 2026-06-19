@@ -1,6 +1,7 @@
 'use client'
 
 import React, { useState, useMemo, useEffect } from 'react'
+import Script from 'next/script'
 import Link from 'next/link'
 import { Trash2, Plus, Minus, ChevronLeft, Lock, Truck, CircleCheckBig } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -11,7 +12,6 @@ import { axiosHandle } from '@/lib/api'
 import Image from 'next/image'
 import { toast } from 'sonner'
 import customToast from '@/lib/CustomToast'
-import Razorpay from 'razorpay'
 import { useRouter } from 'next/navigation'
 import { useSelector } from 'react-redux'
 
@@ -218,6 +218,10 @@ const CartPage = () => {
 
   return (
     <div className="min-h-screen bg-background">
+      <Script
+        src="https://checkout.razorpay.com/v1/checkout.js"
+        strategy="afterInteractive"
+      />
       {/* Header */}
       <header className="border-b border-border bg-card sticky top-0 z-10">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">

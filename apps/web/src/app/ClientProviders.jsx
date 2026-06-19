@@ -6,7 +6,7 @@ import { ThemeProvider } from "@/components/theme-provider";
 import Navbar from "@/components/home_components/Navbar";
 import { SearchProvider } from "@/contexts/searchProductsContext";
 import { Toaster } from "@/components/ui/sonner";
-import Script from "next/script";
+
 import { Provider } from "react-redux";
 import store from "@/redux/store";
 import { SocketProvider } from "@/contexts/useSocket";
@@ -34,10 +34,6 @@ function AppShell({ children, token }) {
 export default function ClientProviders({ children, token }) {
   return (
     <>
-      <Script
-        src="https://checkout.razorpay.com/v1/checkout.js"
-        strategy="afterInteractive"
-      />
       <Provider store={store}>
         <ThemeProvider
           attribute="class"

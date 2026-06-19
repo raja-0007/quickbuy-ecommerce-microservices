@@ -1,28 +1,31 @@
-'use client'
-
-import React, { useEffect, useState } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
+import axios from 'axios'
+import { redirect } from 'next/navigation'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '../api/auth/[...nextauth]/route'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
 import { Clock, ChevronLeft } from 'lucide-react'
-import { axiosHandle } from '@/lib/api'
 
-export default function OrdersPage() {
-    const [orders, setOrders] = useState([])
-    const getOrders = async () => {
-        try {
-            const res = await axiosHandle.get(`/orders/getUserOrders`)
-            console.log('Fetched orders:', res.data)
-            setOrders(res.data)
-        } catch (err) {
-            console.log('Error fetching orders:', err)
-        }
+const fetchUserOrders = async (accessToken) => {
+    const res = await axios.get(`${process.env.NEXT_PUBLIC_API_URL}/orders/getUserOrders`, {
+        headers: {
+            Authorization: `Bearer ${accessToken}`,
+        },
+    })
+    return Array.isArray(res.data) ? res.data : res.data.orders || []
+}
+
+export default async function OrdersPage() {
+    const session = await getServerSession(authOptions)
+
+    if (!session?.user?.accessToken) {
+        redirect('/login')
     }
 
-    useEffect(() => {
-        getOrders()
-    }, [])
+    const orders = await fetchUserOrders(session.user.accessToken)
 
     return (
         <main className="min-h-screen bg-background text-foreground">
@@ -30,11 +33,11 @@ export default function OrdersPage() {
             <div className="border-b border-border bg-card">
                 <div className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
                     <div className="flex items-center gap-4">
-                        <Link href="/profile">
-                            <Button variant="ghost" size="icon" className="hover:bg-secondary">
+                        <Button asChild variant="ghost" size="icon" className="hover:bg-secondary">
+                            <Link href="/profile">
                                 <ChevronLeft size={20} />
-                            </Button>
-                        </Link>
+                            </Link>
+                        </Button>
                         <div>
                             <h1 className="text-3xl font-bold text-foreground">All Orders</h1>
                             <p className="mt-1 text-sm text-muted-foreground">
@@ -69,8 +72,8 @@ export default function OrdersPage() {
                                 </div>
                                 <Badge
                                     className={`${order.status === 'DELIVERED'
-                                            ? 'bg-green-500 text-white'
-                                            : 'bg-amber-500 text-white'
+                                        ? 'bg-green-500 text-white'
+                                        : 'bg-amber-500 text-white'
                                         }`}
                                 >
                                     {order.status === 'DELIVERED' ? 'Delivered' : 'Processing'}
@@ -86,11 +89,14 @@ export default function OrdersPage() {
                                     >
                                         {/* Product Image */}
                                         <div className="relative mb-3 overflow-hidden rounded bg-background">
-                                            <img
-                                                src={item.imageUrl || '/placeholder.svg'}
-                                                alt={item.title}
-                                                className="h-28 w-full object-cover transition-transform group-hover:scale-105"
-                                            />
+                                            <div className='relative h-28 w-full'>
+                                                <Image
+                                                    fill
+                                                    src={item.imageUrl || '/placeholder.svg'}
+                                                    alt={item.title || 'Product image'}
+                                                    className="object-cover transition-transform group-hover:scale-105"
+                                                />
+                                            </div>
                                             {item.discountPercentage > 0 && (
                                                 <div className="absolute right-1 top-1 rounded bg-accent px-1.5 py-0.5 text-xs font-semibold text-accent-foreground">
                                                     -{item.discountPercentage.toFixed(0)}%
@@ -207,8 +213,8 @@ export default function OrdersPage() {
                                     <div className="flex items-center gap-3">
                                         <div
                                             className={`h-3 w-3 rounded-full ${order.status === 'DELIVERED'
-                                                    ? 'bg-green-500'
-                                                    : 'bg-amber-500'
+                                                ? 'bg-green-500'
+                                                : 'bg-amber-500'
                                                 }`}
                                         />
                                         <div>

@@ -3,6 +3,20 @@ import { getSession, signOut } from 'next-auth/react';
 // import { useRouter } from 'next/navigation';
 // const router = useRouter()
 const url = process.env.NEXT_PUBLIC_API_URL;
+const SESSION_CACHE_MS = 2 * 60 * 1000;
+let cachedSession = null;
+let cachedSessionTime = 0;
+
+const getCachedSession = async () => {
+    const now = Date.now();
+    if (cachedSession && now - cachedSessionTime < SESSION_CACHE_MS) {
+        return cachedSession;
+    }
+
+    cachedSession = await getSession();
+    cachedSessionTime = now;
+    return cachedSession;
+};
 
 export const axiosHandle = axios.create({
     baseURL: process.env.NEXT_PUBLIC_API_URL,
@@ -11,8 +25,7 @@ export const axiosHandle = axios.create({
 
 axiosHandle.interceptors.request.use(
     async(config)=>{
-        const session = await getSession();
-        // console.log('session in interceptor', session)
+        const session = await getCachedSession();
         if(session && session.user && session.user.accessToken){
             config.headers['Authorization'] = `Bearer ${session.user.accessToken}`;
         }
@@ -20,22 +33,20 @@ axiosHandle.interceptors.request.use(
         return config
     },
     (error)=>{
-        // console.log('Request error:', error);
         return Promise.reject(error);
     }
 )
 
 axiosHandle.interceptors.response.use(
     async(response)=>{
-        // console.log('Response:', response);
         return response;
     },
     async(error)=>{
         console.log('Response error:', error.response);
         if(error.response && error.response.status === 401){
-            // Handle unauthorized access, e.g., redirect to login
+            cachedSession = null;
+            cachedSessionTime = 0;
             console.log('Unauthorized! Redirecting to login...');
-            // router.push('/login');
             await signOut();
             if (typeof window !== 'undefined') {
                 window.location.href = '/login';
